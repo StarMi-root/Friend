@@ -98,7 +98,6 @@ function App() {
       if (idx !== -1) {
         data.users[idx].username = editUsername;
         data.users[idx].birthday = editBirthday;
-        // Update related data
         data.photos.forEach(p => { if (p.username === editingUser) p.username = editUsername; });
         data.friends.forEach(f => { if (f.username === editingUser) f.username = editUsername; });
         data.wishes.forEach(w => { if (w.username === editingUser) w.username = editUsername; });
@@ -110,59 +109,64 @@ function App() {
     };
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4 md:p-8">
-        <div className="max-w-6xl mx-auto">
+      <div className="min-h-screen bg-white p-6 md:p-10">
+        <div className="max-w-5xl mx-auto">
           <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold text-white">⚙️ 管理员面板</h1>
+            <h1 className="text-xl font-light text-gray-900">管理员面板</h1>
             <button
               onClick={() => setShowAdmin(false)}
-              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg"
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200"
             >
               返回
             </button>
           </div>
 
           {/* Admin Tabs */}
-          <div className="flex gap-2 mb-6 flex-wrap">
-            {['users', 'photos', 'friends', 'wishes'].map(tab => (
+          <div className="flex gap-1 mb-6 flex-wrap border-b border-gray-100 pb-3">
+            {[
+              { id: 'users', label: '用户' },
+              { id: 'photos', label: '照片' },
+              { id: 'friends', label: '好友' },
+              { id: 'wishes', label: '愿望' }
+            ].map(tab => (
               <button
-                key={tab}
-                onClick={() => setAdminTab(tab)}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
-                  adminTab === tab ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                key={tab.id}
+                onClick={() => setAdminTab(tab.id)}
+                className={`px-4 py-2 rounded-lg text-sm transition-all ${
+                  adminTab === tab.id ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
                 }`}
               >
-                {tab === 'users' ? '👥 用户' : tab === 'photos' ? '📷 照片' : tab === 'friends' ? '🤝 好友' : '🌟 愿望'}
+                {tab.label}
               </button>
             ))}
           </div>
 
           {/* Users Tab */}
           {adminTab === 'users' && (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {allUsers.map(u => (
-                <div key={u.username} className="bg-gray-800/50 rounded-xl p-4 border border-gray-700 flex items-center justify-between">
+                <div key={u.username} className="bg-gray-50 rounded-xl p-4 border border-gray-100 flex items-center justify-between">
                   <div>
-                    <span className="text-white font-bold">{u.username}</span>
-                    <span className="text-gray-500 text-sm ml-3">生日: {u.birthday}</span>
+                    <span className="text-gray-900 text-sm font-medium">{u.username}</span>
+                    <span className="text-gray-400 text-xs ml-3">生日: {u.birthday}</span>
                   </div>
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleEditUser(u.username)}
-                      className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded"
+                      className="px-3 py-1 bg-gray-900 text-white text-xs rounded-lg hover:bg-gray-800"
                     >
                       编辑
                     </button>
                     <button
                       onClick={() => handleDeleteUser(u.username)}
-                      className="px-3 py-1 bg-red-700 hover:bg-red-800 text-white text-sm rounded"
+                      className="px-3 py-1 bg-gray-100 text-gray-500 text-xs rounded-lg hover:bg-red-50 hover:text-red-500"
                     >
                       删除
                     </button>
                   </div>
                 </div>
               ))}
-              {allUsers.length === 0 && <p className="text-gray-500 text-center py-8">暂无普通用户</p>}
+              {allUsers.length === 0 && <p className="text-gray-400 text-sm text-center py-8">暂无普通用户</p>}
             </div>
           )}
 
@@ -170,97 +174,97 @@ function App() {
           {adminTab === 'photos' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {allPhotos.map(p => (
-                <div key={p.id} className="bg-gray-800/50 rounded-xl overflow-hidden border border-gray-700">
-                  <img src={p.src} alt="" className="w-full h-32 object-cover" />
+                <div key={p.id} className="bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
+                  <img src={p.src} alt="" className="w-full h-28 object-cover" />
                   <div className="p-3">
-                    <p className="text-gray-300 text-sm">{p.caption}</p>
-                    <p className="text-gray-500 text-xs">用户: {p.username}</p>
+                    <p className="text-gray-700 text-sm">{p.caption}</p>
+                    <p className="text-gray-400 text-xs">用户: {p.username}</p>
                     <button
                       onClick={() => handleDeletePhoto(p.id)}
-                      className="mt-2 px-3 py-1 bg-red-700 hover:bg-red-800 text-white text-xs rounded"
+                      className="mt-2 px-3 py-1 bg-gray-100 text-gray-500 text-xs rounded-lg hover:bg-red-50 hover:text-red-500"
                     >
                       删除
                     </button>
                   </div>
                 </div>
               ))}
-              {allPhotos.length === 0 && <p className="text-gray-500 text-center py-8 col-span-full">暂无照片</p>}
+              {allPhotos.length === 0 && <p className="text-gray-400 text-sm text-center py-8 col-span-full">暂无照片</p>}
             </div>
           )}
 
           {/* Friends Tab */}
           {adminTab === 'friends' && (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {allFriends.map(f => (
-                <div key={f.id} className="bg-gray-800/50 rounded-xl p-4 border border-gray-700 flex items-center justify-between">
+                <div key={f.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100 flex items-center justify-between">
                   <div>
-                    <span className="text-white font-bold">{f.name}</span>
-                    <span className="text-gray-500 text-sm ml-3">分组: {f.group} | 用户: {f.username} | 照片: {f.photos.length}</span>
+                    <span className="text-gray-900 text-sm font-medium">{f.name}</span>
+                    <span className="text-gray-400 text-xs ml-3">分组: {f.group} · 用户: {f.username} · 照片: {f.photos.length}</span>
                   </div>
                   <button
                     onClick={() => handleDeleteFriend(f.id)}
-                    className="px-3 py-1 bg-red-700 hover:bg-red-800 text-white text-sm rounded"
+                    className="px-3 py-1 bg-gray-100 text-gray-500 text-xs rounded-lg hover:bg-red-50 hover:text-red-500"
                   >
                     删除
                   </button>
                 </div>
               ))}
-              {allFriends.length === 0 && <p className="text-gray-500 text-center py-8">暂无好友数据</p>}
+              {allFriends.length === 0 && <p className="text-gray-400 text-sm text-center py-8">暂无好友数据</p>}
             </div>
           )}
 
           {/* Wishes Tab */}
           {adminTab === 'wishes' && (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {allWishes.map(w => (
-                <div key={w.id} className="bg-gray-800/50 rounded-xl p-4 border border-gray-700 flex items-center justify-between">
+                <div key={w.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100 flex items-center justify-between">
                   <div>
-                    <span className="text-white">{w.text}</span>
-                    <span className="text-gray-500 text-sm ml-3">用户: {w.username} | {new Date(w.date).toLocaleDateString()}</span>
+                    <span className="text-gray-900 text-sm">{w.text}</span>
+                    <span className="text-gray-400 text-xs ml-3">用户: {w.username} · {new Date(w.date).toLocaleDateString()}</span>
                   </div>
                   <button
                     onClick={() => handleDeleteWish(w.id)}
-                    className="px-3 py-1 bg-red-700 hover:bg-red-800 text-white text-sm rounded"
+                    className="px-3 py-1 bg-gray-100 text-gray-500 text-xs rounded-lg hover:bg-red-50 hover:text-red-500"
                   >
                     删除
                   </button>
                 </div>
               ))}
-              {allWishes.length === 0 && <p className="text-gray-500 text-center py-8">暂无愿望</p>}
+              {allWishes.length === 0 && <p className="text-gray-400 text-sm text-center py-8">暂无愿望</p>}
             </div>
           )}
 
           {/* Edit User Modal */}
           {editingUser && (
-            <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-              <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700 w-full max-w-sm">
-                <h3 className="text-white text-lg font-bold mb-4">编辑用户</h3>
+            <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-xl p-6 border border-gray-100 w-full max-w-sm shadow-lg">
+                <h3 className="text-gray-900 text-sm font-medium mb-4">编辑用户</h3>
                 <div className="space-y-3">
                   <input
                     type="text"
                     value={editUsername}
                     onChange={e => setEditUsername(e.target.value)}
                     placeholder="用户名"
-                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:border-blue-500 focus:outline-none"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-gray-900 text-sm focus:border-gray-400 focus:outline-none"
                   />
                   <input
                     type="text"
                     value={editBirthday}
                     onChange={e => setEditBirthday(e.target.value)}
                     placeholder="生日 (MM-DD)"
-                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:border-blue-500 focus:outline-none"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-gray-900 text-sm focus:border-gray-400 focus:outline-none"
                   />
                 </div>
-                <div className="flex gap-3 mt-4">
+                <div className="flex gap-2 mt-4">
                   <button
                     onClick={handleSaveUser}
-                    className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold"
+                    className="flex-1 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800"
                   >
                     保存
                   </button>
                   <button
                     onClick={() => setEditingUser(null)}
-                    className="flex-1 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg"
+                    className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200"
                   >
                     取消
                   </button>
@@ -274,60 +278,54 @@ function App() {
   };
 
   if (showAdmin) {
-    return (
-      <>
-        <AdminPanel />
-      </>
-    );
+    return <AdminPanel />;
   }
 
   const navItems = [
-    { id: 'home', label: '首页', icon: '🏠' },
-    { id: 'birthday', label: '生日', icon: '🎂' },
-    { id: 'footprints', label: '足迹', icon: '📸' },
-    { id: 'friendwall', label: '友谊墙', icon: '🤝' },
-    { id: 'achievements', label: '成就', icon: '🏆' },
+    { id: 'home', label: '首页' },
+    { id: 'birthday', label: '生日' },
+    { id: 'footprints', label: '足迹' },
+    { id: 'friendwall', label: '友谊墙' },
+    { id: 'achievements', label: '成就' },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-900" key={refreshKey}>
+    <div className="min-h-screen bg-white" key={refreshKey}>
       {/* Navigation Bar */}
-      <nav className="fixed top-0 left-0 right-0 z-40 bg-gray-900/95 backdrop-blur-sm border-b border-gray-700">
-        <div className="max-w-6xl mx-auto px-4">
+      <nav className="fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-100">
+        <div className="max-w-5xl mx-auto px-4 md:px-6">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-2">
-              <span className="text-xl">📸</span>
-              <span className="text-white font-bold hidden sm:inline">我们的故事</span>
+              <span className="text-gray-900 text-sm font-medium tracking-wide">我们的故事</span>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="hidden md:flex items-center gap-1">
               {navItems.map(item => (
                 <button
                   key={item.id}
                   onClick={() => setCurrentPage(item.id)}
                   className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
                     currentPage === item.id
-                      ? 'bg-red-600 text-white'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                      ? 'bg-gray-900 text-white'
+                      : 'text-gray-400 hover:text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  <span className="mr-1">{item.icon}</span>
-                  <span className="hidden md:inline">{item.label}</span>
+                  {item.label}
                 </button>
               ))}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               {user.isAdmin && (
                 <button
                   onClick={() => setShowAdmin(true)}
-                  className="px-3 py-1.5 bg-yellow-600 hover:bg-yellow-700 text-white text-xs rounded-lg font-bold"
+                  className="px-3 py-1.5 bg-gray-900 text-white text-xs rounded-lg font-medium hover:bg-gray-800"
                 >
                   管理
                 </button>
               )}
-              <span className="text-gray-400 text-sm hidden sm:inline">{user.username}</span>
+              <span className="text-gray-400 text-xs hidden sm:inline">{user.username}</span>
               <button
                 onClick={handleLogout}
-                className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded-lg"
+                className="px-3 py-1.5 text-gray-400 hover:text-gray-600 text-xs"
               >
                 退出
               </button>
@@ -346,18 +344,18 @@ function App() {
       </div>
 
       {/* Mobile Bottom Nav */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-gray-900/95 backdrop-blur-sm border-t border-gray-700 md:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-t border-gray-100 md:hidden">
         <div className="flex items-center justify-around h-14">
           {navItems.map(item => (
             <button
               key={item.id}
               onClick={() => setCurrentPage(item.id)}
-              className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg transition-all ${
-                currentPage === item.id ? 'text-red-400' : 'text-gray-500'
+              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-all ${
+                currentPage === item.id ? 'text-gray-900' : 'text-gray-400'
               }`}
             >
-              <span className="text-lg">{item.icon}</span>
-              <span className="text-xs">{item.label}</span>
+              <span className="text-xs font-medium">{item.label}</span>
+              {currentPage === item.id && <div className="w-1 h-1 bg-gray-900 rounded-full"></div>}
             </button>
           ))}
         </div>

@@ -15,116 +15,89 @@ export const Home: React.FC<HomeProps> = ({ user, onNavigate }) => {
   const monthsSinceBday = getMonthsSinceBirthday(user.birthday);
 
   const stats = [
-    { icon: '📷', label: '摄影作品', value: userPhotos.length, color: 'from-red-600 to-red-800' },
-    { icon: '🤝', label: '好友', value: userFriends.length, color: 'from-blue-600 to-blue-800' },
-    { icon: '🕯️', label: '许愿', value: userWishes.length, color: 'from-purple-600 to-purple-800' },
-    { icon: '🏆', label: '成就', value: data.achievements.filter(a => a.username === user.username && a.unlocked).length, color: 'from-yellow-600 to-yellow-800' },
+    { label: '摄影作品', value: userPhotos.length, page: 'footprints' },
+    { label: '好友', value: userFriends.length, page: 'friendwall' },
+    { label: '许愿', value: userWishes.length, page: 'birthday' },
+    { label: '成就', value: data.achievements.filter(a => a.username === user.username && a.unlocked).length, page: 'achievements' },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Welcome Section */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-3 bg-gray-800/50 backdrop-blur-sm rounded-full px-6 py-2 border border-gray-700 mb-6">
-            <span className="text-2xl">🏀</span>
-            <span className="text-gray-300 text-sm">欢迎回来，{user.username}</span>
-            <span className="text-2xl">📸</span>
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            记录每一个<span className="text-red-500">精彩瞬间</span>
+    <div className="min-h-screen bg-white p-6 md:p-10">
+      <div className="max-w-5xl mx-auto">
+        {/* Welcome */}
+        <div className="mb-12">
+          <p className="text-gray-400 text-sm mb-2">欢迎回来，{user.username}</p>
+          <h1 className="text-3xl md:text-4xl font-light text-gray-900 tracking-tight">
+            记录每一个<span className="font-medium">精彩瞬间</span>
           </h1>
-          <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-            用 Canon EOS R50 捕捉生活的美好，记录友谊的点滴，见证成长的足迹
+          <p className="text-gray-400 text-sm mt-3 max-w-xl">
+            用 Canon EOS R50 捕捉生活的美好，记录友谊的点滴
           </p>
         </div>
 
-        {/* Stats Grid */}
+        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
           {stats.map((stat, i) => (
-            <div key={i} className={`bg-gradient-to-br ${stat.color} rounded-xl p-5 text-center shadow-lg transform hover:scale-105 transition-all cursor-pointer`}
-              onClick={() => onNavigate(['birthday', 'friendwall', 'footprints', 'achievements'][i])}>
-              <div className="text-3xl mb-2">{stat.icon}</div>
-              <div className="text-2xl font-bold text-white">{stat.value}</div>
-              <div className="text-white/70 text-sm">{stat.label}</div>
+            <div
+              key={i}
+              onClick={() => onNavigate(stat.page)}
+              className="bg-gray-50 rounded-xl p-5 cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100"
+            >
+              <div className="text-2xl font-light text-gray-900">{stat.value}</div>
+              <div className="text-gray-400 text-xs mt-1">{stat.label}</div>
             </div>
           ))}
         </div>
 
-        {/* Birthday Info Card */}
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700 mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="text-4xl">🎂</div>
+        {/* Birthday Info */}
+        <div className="bg-gray-50 rounded-xl p-6 border border-gray-100 mb-8">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-white text-xl font-bold">生日倒计时</h3>
-              <p className="text-gray-400">
-                {monthsSinceBday === 0 ? '今天是你的生日！🎉' : `距离下次生日还有 ${12 - monthsSinceBday} 个月`}
+              <h3 className="text-gray-900 text-sm font-medium">生日信息</h3>
+              <p className="text-gray-400 text-xs mt-1">
+                {monthsSinceBday === 0 ? '今天是你的生日' : `距离下次生日还有 ${12 - monthsSinceBday} 个月`}
               </p>
             </div>
+            <button
+              onClick={() => onNavigate('birthday')}
+              className="text-xs text-gray-400 hover:text-gray-600"
+            >
+              前往 →
+            </button>
           </div>
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div className="bg-gray-900/50 rounded-lg p-3">
-              <div className="text-red-400 text-2xl font-bold">{age}</div>
-              <div className="text-gray-500 text-xs">岁</div>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="bg-white rounded-lg p-3 border border-gray-100">
+              <div className="text-gray-900 text-lg font-light">{age}</div>
+              <div className="text-gray-400 text-xs">岁</div>
             </div>
-            <div className="bg-gray-900/50 rounded-lg p-3">
-              <div className="text-red-400 text-2xl font-bold">{user.birthday}</div>
-              <div className="text-gray-500 text-xs">生日</div>
+            <div className="bg-white rounded-lg p-3 border border-gray-100">
+              <div className="text-gray-900 text-lg font-light">{user.birthday}</div>
+              <div className="text-gray-400 text-xs">生日</div>
             </div>
-            <div className="bg-gray-900/50 rounded-lg p-3">
-              <div className="text-red-400 text-2xl font-bold">{userPhotos.length}</div>
-              <div className="text-gray-500 text-xs">作品数</div>
+            <div className="bg-white rounded-lg p-3 border border-gray-100">
+              <div className="text-gray-900 text-lg font-light">{userPhotos.length}</div>
+              <div className="text-gray-400 text-xs">作品</div>
             </div>
           </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700 hover:border-red-500/50 transition-all cursor-pointer"
-            onClick={() => onNavigate('birthday')}>
-            <div className="flex items-center gap-4">
-              <div className="text-4xl">🎂</div>
-              <div>
-                <h3 className="text-white text-lg font-bold">生日页面</h3>
-                <p className="text-gray-400 text-sm">许愿、吹蜡烛、记录生日瞬间</p>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[
+            { title: '生日', desc: '许愿、吹蜡烛、记录生日瞬间', page: 'birthday' },
+            { title: '足迹', desc: '上传摄影作品，记录成长足迹', page: 'footprints' },
+            { title: '友谊墙', desc: '管理好友分组，记录友谊时光', page: 'friendwall' },
+            { title: '成就', desc: '解锁成就，见证人生重要时刻', page: 'achievements' },
+          ].map((item, i) => (
+            <div
+              key={i}
+              onClick={() => onNavigate(item.page)}
+              className="bg-gray-50 rounded-xl p-5 border border-gray-100 hover:border-gray-200 transition-colors cursor-pointer"
+            >
+              <h3 className="text-gray-900 text-sm font-medium">{item.title}</h3>
+              <p className="text-gray-400 text-xs mt-1">{item.desc}</p>
             </div>
-          </div>
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700 hover:border-red-500/50 transition-all cursor-pointer"
-            onClick={() => onNavigate('footprints')}>
-            <div className="flex items-center gap-4">
-              <div className="text-4xl">📸</div>
-              <div>
-                <h3 className="text-white text-lg font-bold">足迹</h3>
-                <p className="text-gray-400 text-sm">上传摄影作品，记录成长足迹</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700 hover:border-red-500/50 transition-all cursor-pointer"
-            onClick={() => onNavigate('friendwall')}>
-            <div className="flex items-center gap-4">
-              <div className="text-4xl">🤝</div>
-              <div>
-                <h3 className="text-white text-lg font-bold">友谊墙</h3>
-                <p className="text-gray-400 text-sm">管理好友分组，记录友谊时光</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700 hover:border-red-500/50 transition-all cursor-pointer"
-            onClick={() => onNavigate('achievements')}>
-            <div className="flex items-center gap-4">
-              <div className="text-4xl">🏆</div>
-              <div>
-                <h3 className="text-white text-lg font-bold">成就</h3>
-                <p className="text-gray-400 text-sm">解锁成就，见证人生重要时刻</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="mt-12 text-center text-gray-600 text-sm">
-          <p>🏀 为热爱摄影和篮球的你设计 | Canon EOS R50</p>
+          ))}
         </div>
       </div>
     </div>

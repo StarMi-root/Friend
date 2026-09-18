@@ -17,13 +17,11 @@ export const CameraAnimation: React.FC<CameraAnimationProps> = ({ onComplete, on
   }, []);
 
   const handleCapture = () => {
-    // Use webcam if available, otherwise generate placeholder
     const canvas = document.createElement('canvas');
     canvas.width = 640;
     canvas.height = 480;
     const ctx = canvas.getContext('2d');
     if (ctx) {
-      // Create a stylish placeholder image
       const gradient = ctx.createLinearGradient(0, 0, 640, 480);
       gradient.addColorStop(0, '#1a1a2e');
       gradient.addColorStop(0.5, '#16213e');
@@ -31,7 +29,6 @@ export const CameraAnimation: React.FC<CameraAnimationProps> = ({ onComplete, on
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, 640, 480);
       
-      // Add camera grid lines
       ctx.strokeStyle = 'rgba(255,255,255,0.1)';
       ctx.lineWidth = 1;
       for (let i = 1; i < 3; i++) {
@@ -45,17 +42,14 @@ export const CameraAnimation: React.FC<CameraAnimationProps> = ({ onComplete, on
         ctx.stroke();
       }
       
-      // Add Canon watermark
       ctx.fillStyle = 'rgba(255,255,255,0.3)';
       ctx.font = '14px serif';
       ctx.fillText('Canon EOS R50', 20, 460);
       
-      // Add timestamp
       ctx.fillStyle = 'rgba(255,255,255,0.5)';
       ctx.font = '12px monospace';
       ctx.fillText(new Date().toLocaleString(), 440, 460);
       
-      // Center circle (focus point)
       ctx.strokeStyle = 'rgba(255, 0, 0, 0.6)';
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -82,7 +76,6 @@ export const CameraAnimation: React.FC<CameraAnimationProps> = ({ onComplete, on
           const ctx = canvas.getContext('2d');
           if (ctx) {
             ctx.drawImage(video, 0, 0, 640, 480);
-            // Add Canon watermark
             ctx.fillStyle = 'rgba(255,255,255,0.3)';
             ctx.font = '14px serif';
             ctx.fillText('Canon EOS R50', 20, 460);
@@ -105,87 +98,78 @@ export const CameraAnimation: React.FC<CameraAnimationProps> = ({ onComplete, on
   };
 
   return (
-    <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center">
-      <div className="relative w-full max-w-lg mx-4">
-        {/* Canon R50 Camera Animation */}
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+      <div className="relative w-full max-w-md">
         {phase === 'arriving' && (
-          <div className="animate-bounce text-center">
-            <div className="text-6xl mb-4">📸</div>
-            <div className="bg-gray-900 border border-gray-700 rounded-lg p-6">
-              <div className="text-white text-lg font-bold mb-2">Canon EOS R50</div>
-              <div className="text-gray-400 text-sm">正在送达...</div>
-              <div className="mt-4 flex justify-center">
-                <div className="w-32 h-1 bg-gray-700 rounded-full overflow-hidden">
-                  <div className="h-full bg-red-500 rounded-full animate-pulse" style={{width: '60%'}}></div>
-                </div>
-              </div>
+          <div className="bg-white rounded-xl p-8 border border-gray-100 shadow-lg text-center">
+            <div className="w-12 h-12 mx-auto mb-4 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin"></div>
+            <div className="text-gray-900 text-sm font-medium mb-1">Canon EOS R50</div>
+            <div className="text-gray-400 text-xs">正在送达...</div>
+            <div className="mt-4 w-32 mx-auto h-1 bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-full bg-gray-900 rounded-full animate-pulse" style={{width: '60%'}}></div>
             </div>
           </div>
         )}
 
         {phase === 'ready' && (
-          <div className="text-center animate-fade-in">
-            {/* Camera body */}
-            <div className="relative bg-gray-900 rounded-2xl p-8 border-2 border-gray-700 shadow-2xl">
-              <div className="absolute top-2 right-3 text-xs text-red-500 font-bold">Canon</div>
-              <div className="text-white text-xl font-bold mb-2">EOS R50</div>
-              <div className="w-32 h-32 mx-auto rounded-full bg-gray-800 border-4 border-gray-600 flex items-center justify-center mb-4">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-900 to-purple-900 border-2 border-gray-500">
-                  <div className="w-8 h-8 mx-auto mt-6 rounded-full bg-gray-900 border border-gray-400"></div>
+          <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-lg">
+            <div className="text-center mb-4">
+              <div className="w-24 h-24 mx-auto rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center mb-3">
+                <div className="w-14 h-14 rounded-full bg-gray-200 border border-gray-300 flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-full bg-gray-400"></div>
                 </div>
               </div>
-              <div className="text-gray-400 text-sm mb-4">准备就绪</div>
-              
-              <div className="flex gap-3 justify-center">
-                <button
-                  onClick={handleWebcamCapture}
-                  className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-bold transition-all transform hover:scale-105"
-                >
-                  📷 拍摄
-                </button>
-                <button
-                  onClick={handleCapture}
-                  className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-full font-bold transition-all"
-                >
-                  🎨 模拟拍摄
-                </button>
-              </div>
-              
+              <div className="text-gray-900 text-sm font-medium">Canon EOS R50</div>
+              <div className="text-gray-400 text-xs mt-0.5">准备就绪</div>
+            </div>
+            
+            <div className="flex gap-2 justify-center">
               <button
-                onClick={onCancel}
-                className="mt-4 text-gray-500 hover:text-gray-300 text-sm"
+                onClick={handleWebcamCapture}
+                className="px-5 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800"
               >
-                取消
+                拍摄
+              </button>
+              <button
+                onClick={handleCapture}
+                className="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200"
+              >
+                模拟拍摄
               </button>
             </div>
+            
+            <button
+              onClick={onCancel}
+              className="mt-3 w-full text-gray-400 hover:text-gray-600 text-xs py-2"
+            >
+              取消
+            </button>
           </div>
         )}
 
         {phase === 'captured' && capturedImage && (
-          <div className="text-center">
-            <div className="bg-gray-900 rounded-xl p-4 border border-gray-700">
-              <img src={capturedImage} alt="Captured" className="w-full rounded-lg mb-4" />
-              <div className="text-gray-400 text-xs mb-3">Canon EOS R50 | {new Date().toLocaleString()}</div>
-              <div className="flex gap-3 justify-center">
-                <button
-                  onClick={handleConfirm}
-                  className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold"
-                >
-                  ✓ 确认使用
-                </button>
-                <button
-                  onClick={() => setPhase('ready')}
-                  className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg"
-                >
-                  重拍
-                </button>
-                <button
-                  onClick={onCancel}
-                  className="px-6 py-2 bg-red-700 hover:bg-red-800 text-white rounded-lg"
-                >
-                  取消
-                </button>
-              </div>
+          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-lg">
+            <img src={capturedImage} alt="Captured" className="w-full rounded-lg mb-3" />
+            <div className="text-gray-400 text-xs mb-3 text-center">Canon EOS R50 · {new Date().toLocaleString()}</div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleConfirm}
+                className="flex-1 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800"
+              >
+                确认使用
+              </button>
+              <button
+                onClick={() => setPhase('ready')}
+                className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200"
+              >
+                重拍
+              </button>
+              <button
+                onClick={onCancel}
+                className="flex-1 py-2 bg-gray-100 text-gray-500 rounded-lg text-sm hover:bg-gray-200"
+              >
+                取消
+              </button>
             </div>
           </div>
         )}

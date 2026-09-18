@@ -139,7 +139,7 @@ export function getLevelLabel(level: number): string {
     2: '初次相识',
     3: '渐入佳境',
     4: '友谊升温',
-    5: '我们的友谊坚如磐石',
+    5: '友谊坚如磐石',
     6: '一生挚友'
   };
   return labels[level] || '未知';
