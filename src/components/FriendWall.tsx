@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { User, loadData, saveData, generateId, Friend, Photo, getLevelLabel } from '../store';
 import { CameraAnimation } from './CameraAnimation';
-import { getFriendMessages, saveFriendMessage, FriendMessage } from '../utils';
+import { getFriendMessages, saveFriendMessage, FriendMessage, getAnniversaries, saveAnniversary, getDaysSince, FriendshipAnniversary } from '../utils';
 
 interface FriendWallProps {
   user: User;
@@ -16,6 +16,8 @@ export const FriendWall: React.FC<FriendWallProps> = ({ user, onDataUpdate }) =>
   const [showCamera, setShowCamera] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [newMessage, setNewMessage] = useState('');
+  const [anniversaryDate, setAnniversaryDate] = useState('');
+  const [showAnniversaryInput, setShowAnniversaryInput] = useState(false);
 
   const data = loadData();
   const userFriends = data.friends.filter(f => f.username === user.username);
@@ -137,6 +139,27 @@ export const FriendWall: React.FC<FriendWallProps> = ({ user, onDataUpdate }) =>
     setNewMessage('');
   };
 
+  const handleSaveAnniversary = () => {
+    if (!anniversaryDate || !selectedFriend) return;
+    const anniversary: FriendshipAnniversary = {
+      friendId: selectedFriend.id,
+      startDate: anniversaryDate,
+      username: user.username
+    };
+    saveAnniversary(anniversary);
+    setAnniversaryDate('');
+    setShowAnniversaryInput(false);
+  };
+
+  const getAnniversaryDays = (friendId: string): number | null => {
+    const anniversaries = getAnniversaries(user.username);
+    const ann = anniversaries.find(a => a.friendId === friendId);
+    if (ann) {
+      return getDaysSince(ann.startDate);
+    }
+    return null;
+  };
+
   // Friend detail view
   if (selectedFriend) {
     const friendLevel = getFriendLevel(selectedFriend);
@@ -244,6 +267,60 @@ export const FriendWall: React.FC<FriendWallProps> = ({ user, onDataUpdate }) =>
               <p className="text-gray-300 text-xs mt-1">拍摄或上传照片来记录你们的友谊吧</p>
             </div>
           )}
+
+          {/* Anniversary Section */}
+          <div className="bg-gray-50 rounded-xl p-6 border border-gray-100 mt-8">
+            <h3 className="text-gray-900 text-sm font-medium mb-4">友谊纪念日</h3>
+            {(() => {
+              const days = getAnniversaryDays(selectedFriend.id);
+              if (days !== null) {
+                return (
+                  <div className="text-center py-4">
+                    <div className="text-3xl font-light text-gray-900 mb-2">{days}</div>
+                    <div className="text-gray-500 text-sm">天</div>
+                    <div className="text-gray-400 text-xs mt-2">
+                      从 {getAnniversaries(user.username).find(a => a.friendId === selectedFriend.id)?.startDate} 开始
+                    </div>
+                  </div>
+                );
+              }
+              return (
+                <div>
+                  {showAnniversaryInput ? (
+                    <div className="space-y-3">
+                      <input
+                        type="date"
+                        value={anniversaryDate}
+                        onChange={e => setAnniversaryDate(e.target.value)}
+                        className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 text-gray-900 text-sm focus:border-gray-400 focus:outline-none"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleSaveAnniversary}
+                          className="flex-1 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800"
+                        >
+                          保存
+                        </button>
+                        <button
+                          onClick={() => setShowAnniversaryInput(false)}
+                          className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200"
+                        >
+                          取消
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowAnniversaryInput(true)}
+                      className="w-full py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200"
+                    >
+                      设置纪念日
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
 
           {/* Message Board */}
           <div className="bg-gray-50 rounded-xl p-6 border border-gray-100 mt-8">
@@ -376,11 +453,33 @@ export const FriendWall: React.FC<FriendWallProps> = ({ user, onDataUpdate }) =>
                       </div>
                       <div className="text-right">
                         <span className="text-gray-900 text-sm font-light">Lv.{friendLevel}</span>
+                        {(() => {
+                          const days = getAnniversaryDays(friend.id);
+                          if (days !== null) {
+                            return (
+                              <div className="text-gray-400 text-xs mt-1">
+                                {days} 天
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     </div>
                     <div className="text-gray-400 text-xs italic">
                       {getLevelLabel(friendLevel)}
                     </div>
+                    {(() => {
+                      const messages = getFriendMessages(friend.id);
+                      if (messages.length > 0) {
+                        return (
+                          <div className="mt-2 text-gray-400 text-xs">
+                            {messages.length} 条留言
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
                     {user.isAdmin && (
                       <button
                         onClick={(e) => { e.stopPropagation(); handleDeleteFriend(friend.id); }}
