@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User, loadData, saveData, generateId, Friend, Photo, getLevelLabel } from '../store';
 import { CameraAnimation } from './CameraAnimation';
+import { getFriendMessages, saveFriendMessage, FriendMessage } from '../utils';
 
 interface FriendWallProps {
   user: User;
@@ -14,6 +15,7 @@ export const FriendWall: React.FC<FriendWallProps> = ({ user, onDataUpdate }) =>
   const [newFriendGroup, setNewFriendGroup] = useState('');
   const [showCamera, setShowCamera] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
+  const [newMessage, setNewMessage] = useState('');
 
   const data = loadData();
   const userFriends = data.friends.filter(f => f.username === user.username);
@@ -120,6 +122,19 @@ export const FriendWall: React.FC<FriendWallProps> = ({ user, onDataUpdate }) =>
     if (score >= 25) return 3;
     if (score >= 10) return 2;
     return 1;
+  };
+
+  const handleAddMessage = () => {
+    if (!newMessage.trim() || !selectedFriend) return;
+    const message: FriendMessage = {
+      id: generateId(),
+      friendId: selectedFriend.id,
+      text: newMessage,
+      date: new Date().toISOString(),
+      fromUser: user.username
+    };
+    saveFriendMessage(message);
+    setNewMessage('');
   };
 
   // Friend detail view
@@ -229,6 +244,48 @@ export const FriendWall: React.FC<FriendWallProps> = ({ user, onDataUpdate }) =>
               <p className="text-gray-300 text-xs mt-1">拍摄或上传照片来记录你们的友谊吧</p>
             </div>
           )}
+
+          {/* Message Board */}
+          <div className="bg-gray-50 rounded-xl p-6 border border-gray-100 mt-8">
+            <h3 className="text-gray-900 text-sm font-medium mb-4">留言板</h3>
+            
+            {/* Add message */}
+            <div className="flex gap-2 mb-4">
+              <input
+                type="text"
+                value={newMessage}
+                onChange={e => setNewMessage(e.target.value)}
+                placeholder="写下你想对 TA 说的话..."
+                className="flex-1 bg-white border border-gray-200 rounded-lg px-4 py-2.5 text-gray-900 text-sm focus:border-gray-400 focus:outline-none"
+                onKeyDown={e => e.key === 'Enter' && handleAddMessage()}
+              />
+              <button
+                onClick={handleAddMessage}
+                className="px-5 py-2.5 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+              >
+                留言
+              </button>
+            </div>
+
+            {/* Messages list */}
+            <div className="space-y-3">
+              {getFriendMessages(selectedFriend.id).map(msg => (
+                <div key={msg.id} className="bg-white rounded-lg p-4 border border-gray-100">
+                  <div className="flex items-start justify-between mb-2">
+                    <span className="text-gray-900 text-sm font-medium">{msg.fromUser}</span>
+                    <span className="text-gray-400 text-xs">
+                      {new Date(msg.date).toLocaleDateString('zh-CN')}
+                    </span>
+                  </div>
+                  <p className="text-gray-700 text-sm">{msg.text}</p>
+                </div>
+              ))}
+            </div>
+
+            {getFriendMessages(selectedFriend.id).length === 0 && (
+              <p className="text-gray-400 text-sm text-center py-6">还没有留言，快来写下第一条吧</p>
+            )}
+          </div>
         </div>
       </div>
     );
