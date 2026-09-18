@@ -97,6 +97,63 @@ export function importData(jsonString: string): boolean {
 
 export function saveData(data: AppData): void {
   localStorage.setItem('friendship-app-data', JSON.stringify(data));
+  
+  // Sync to GitHub if configured (async, non-blocking)
+  import('./github-storage').then(({ isGitHubConfigured, writeToGitHub }) => {
+    if (isGitHubConfigured()) {
+      writeToGitHub(data).catch(err => {
+        console.error('Failed to sync to GitHub:', err);
+      });
+    }
+  }).catch(err => {
+    console.error('Failed to load GitHub storage module:', err);
+  });
+}
+
+// Sync data from GitHub to localStorage
+export async function syncFromGitHub(): Promise<{ success: boolean; message: string }> {
+  try {
+    const { isGitHubConfigured, readFromGitHub } = await import('./github-storage');
+    
+    if (!isGitHubConfigured()) {
+      return { success: false, message: '未配置 GitHub' };
+    }
+
+    const githubData = await readFromGitHub();
+    
+    if (githubData) {
+      localStorage.setItem('friendship-app-data', JSON.stringify(githubData));
+      return { success: true, message: '同步成功' };
+    } else {
+      return { success: false, message: 'GitHub 上没有数据' };
+    }
+  } catch (e) {
+    console.error('Sync from GitHub failed:', e);
+    return { success: false, message: '同步失败' };
+  }
+}
+
+// Sync data from localStorage to GitHub
+export async function syncToGitHub(): Promise<{ success: boolean; message: string }> {
+  try {
+    const { isGitHubConfigured, writeToGitHub } = await import('./github-storage');
+    
+    if (!isGitHubConfigured()) {
+      return { success: false, message: '未配置 GitHub' };
+    }
+
+    const localData = loadData();
+    const success = await writeToGitHub(localData);
+    
+    if (success) {
+      return { success: true, message: '上传成功' };
+    } else {
+      return { success: false, message: '上传失败' };
+    }
+  } catch (e) {
+    console.error('Sync to GitHub failed:', e);
+    return { success: false, message: '上传失败' };
+  }
 }
 
 export function getCurrentUser(): User | null {
