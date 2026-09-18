@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { User, loadData, setCurrentUser, getCurrentUser, saveData, clearAllData, exportData, importData, syncFromGitHub, syncToGitHub } from './store';
 import { getGitHubConfig, saveGitHubConfig, clearGitHubConfig, isGitHubConfigured, testGitHubConnection, GitHubConfig } from './github-storage';
+import { initDarkMode, toggleDarkMode, isDarkMode, updateStreak, recordActivity, getNotifications, saveNotifications, getLang, setLang, t, Lang, searchAll } from './utils';
 import { Login } from './components/Login';
 import { Home } from './components/Home';
 import { Birthday } from './components/Birthday';
 import { Footprints } from './components/Footprints';
 import { FriendWall } from './components/FriendWall';
 import { Achievements } from './components/Achievements';
+import { ChallengesPage } from './components/ChallengesPage';
+import { TimeCapsulePage } from './components/TimeCapsulePage';
+import { AnnualReportPage } from './components/AnnualReportPage';
 
 function App() {
   const [user, setUser] = useState<User | null>(getCurrentUser());
@@ -18,6 +22,15 @@ function App() {
   useEffect(() => {
     const saved = getCurrentUser();
     if (saved) setUser(saved);
+
+    // Initialize dark mode
+    initDarkMode();
+
+    // Update streak and record activity
+    if (saved) {
+      updateStreak();
+      recordActivity();
+    }
 
     // Auto sync from GitHub on load
     const trySyncFromGitHub = async () => {
@@ -665,12 +678,35 @@ function App() {
     return <AdminPanel />;
   }
 
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [darkMode, setDarkMode] = useState(isDarkMode());
+  const [lang, setLangState] = useState<Lang>(getLang());
+
+  const handleToggleDarkMode = () => {
+    const isDark = toggleDarkMode();
+    setDarkMode(isDark);
+  };
+
+  const handleToggleLang = () => {
+    const newLang: Lang = lang === 'zh' ? 'en' : 'zh';
+    setLang(newLang);
+    setLangState(newLang);
+  };
+
+  const notifications = getNotifications();
+  const unreadCount = notifications.filter(n => !n.read).length;
+
   const navItems = [
-    { id: 'home', label: '首页' },
-    { id: 'birthday', label: '生日' },
-    { id: 'footprints', label: '足迹' },
-    { id: 'friendwall', label: '友谊墙' },
-    { id: 'achievements', label: '成就' },
+    { id: 'home', label: t('home') },
+    { id: 'birthday', label: t('birthday') },
+    { id: 'footprints', label: t('footprints') },
+    { id: 'friendwall', label: t('friendwall') },
+    { id: 'achievements', label: t('achievements') },
+    { id: 'challenges', label: '挑战' },
+    { id: 'timecapsule', label: '时间胶囊' },
+    { id: 'annual', label: '年度报告' },
   ];
 
   return (
@@ -697,7 +733,52 @@ function App() {
                 </button>
               ))}
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowSearch(!showSearch)}
+                className="p-2 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-50"
+                title="搜索"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="p-2 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-50 relative"
+                title="通知"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={handleToggleDarkMode}
+                className="p-2 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-50"
+                title="深色模式"
+              >
+                {darkMode ? (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                )}
+              </button>
+              <button
+                onClick={handleToggleLang}
+                className="px-2 py-1 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-50 text-xs font-medium"
+                title="切换语言"
+              >
+                {lang === 'zh' ? 'EN' : '中'}
+              </button>
               {user.isAdmin && (
                 <button
                   onClick={() => setShowAdmin(true)}
@@ -718,6 +799,110 @@ function App() {
         </div>
       </nav>
 
+      {/* Search Overlay */}
+      {showSearch && (
+        <div className="fixed inset-0 bg-black/30 z-50 flex items-start justify-center pt-20 p-4">
+          <div className="bg-white rounded-xl p-4 border border-gray-100 w-full max-w-lg shadow-lg">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="搜索照片、愿望、好友..."
+              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-900 text-sm focus:border-gray-400 focus:outline-none mb-3"
+              autoFocus
+            />
+            {searchQuery && (() => {
+              const results = searchAll(data, searchQuery);
+              return (
+                <div className="max-h-80 overflow-y-auto space-y-3">
+                  {results.photos.length > 0 && (
+                    <div>
+                      <h4 className="text-xs text-gray-500 font-medium mb-1">照片 ({results.photos.length})</h4>
+                      {results.photos.slice(0, 5).map(p => (
+                        <div key={p.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer" onClick={() => { setCurrentPage('footprints'); setShowSearch(false); }}>
+                          <img src={p.src} alt="" className="w-8 h-8 rounded object-cover" />
+                          <span className="text-sm text-gray-700 truncate">{p.caption}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {results.wishes.length > 0 && (
+                    <div>
+                      <h4 className="text-xs text-gray-500 font-medium mb-1">愿望 ({results.wishes.length})</h4>
+                      {results.wishes.slice(0, 5).map(w => (
+                        <div key={w.id} className="p-2 rounded-lg hover:bg-gray-50 cursor-pointer" onClick={() => { setCurrentPage('birthday'); setShowSearch(false); }}>
+                          <span className="text-sm text-gray-700">{w.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {results.friends.length > 0 && (
+                    <div>
+                      <h4 className="text-xs text-gray-500 font-medium mb-1">好友 ({results.friends.length})</h4>
+                      {results.friends.slice(0, 5).map(f => (
+                        <div key={f.id} className="p-2 rounded-lg hover:bg-gray-50 cursor-pointer" onClick={() => { setCurrentPage('friendwall'); setShowSearch(false); }}>
+                          <span className="text-sm text-gray-700">{f.name} - {f.group}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {results.photos.length + results.wishes.length + results.friends.length === 0 && (
+                    <p className="text-gray-400 text-sm text-center py-4">没有找到相关内容</p>
+                  )}
+                </div>
+              );
+            })()}
+            <button
+              onClick={() => { setShowSearch(false); setSearchQuery(''); }}
+              className="mt-3 w-full py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200"
+            >
+              关闭
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Notification Panel */}
+      {showNotifications && (
+        <div className="fixed inset-0 bg-black/30 z-50 flex items-start justify-end p-4 pt-16">
+          <div className="bg-white rounded-xl p-4 border border-gray-100 w-full max-w-sm shadow-lg max-h-[70vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium text-gray-900">通知</h3>
+              <button
+                onClick={() => {
+                  const all = getNotifications();
+                  all.forEach(n => n.read = true);
+                  saveNotifications(all);
+                  setRefreshKey(k => k + 1);
+                }}
+                className="text-xs text-gray-400 hover:text-gray-600"
+              >
+                全部已读
+              </button>
+            </div>
+            {notifications.length === 0 ? (
+              <p className="text-gray-400 text-sm text-center py-4">暂无通知</p>
+            ) : (
+              <div className="space-y-2">
+                {notifications.slice(0, 20).map(n => (
+                  <div key={n.id} className={`p-3 rounded-lg border ${n.read ? 'bg-gray-50 border-gray-100' : 'bg-blue-50 border-blue-100'}`}>
+                    <p className="text-sm font-medium text-gray-900">{n.title}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{n.message}</p>
+                    <p className="text-xs text-gray-400 mt-1">{new Date(n.date).toLocaleDateString()}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => setShowNotifications(false)}
+              className="mt-3 w-full py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200"
+            >
+              关闭
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Page Content */}
       <div className="pt-14 pb-16 md:pb-0">
         {currentPage === 'home' && <Home user={user} onNavigate={handleNavigate} />}
@@ -725,6 +910,9 @@ function App() {
         {currentPage === 'footprints' && <Footprints user={user} onDataUpdate={handleDataUpdate} />}
         {currentPage === 'friendwall' && <FriendWall user={user} onDataUpdate={handleDataUpdate} />}
         {currentPage === 'achievements' && <Achievements user={user} onDataUpdate={handleDataUpdate} />}
+        {currentPage === 'challenges' && <ChallengesPage user={user} onDataUpdate={handleDataUpdate} />}
+        {currentPage === 'timecapsule' && <TimeCapsulePage user={user} />}
+        {currentPage === 'annual' && <AnnualReportPage user={user} />}
       </div>
 
       {/* Mobile Bottom Nav */}

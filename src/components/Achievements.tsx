@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { User, loadData, saveData, generateId, Achievement } from '../store';
+import { getRarityLabel, getRarityColor, generateShareCard, getStreakData, Rarity } from '../utils';
 
 interface AchievementsProps {
   user: User;
@@ -67,6 +68,23 @@ export const Achievements: React.FC<AchievementsProps> = ({ user, onDataUpdate }
 
   const defaultAchievements = userAchievements.filter(a => !a.isCustom);
   const customAchievements = userAchievements.filter(a => a.isCustom);
+  const streak = getStreakData();
+
+  // Assign rarity to achievements
+  const getRarity = (ach: Achievement): Rarity => {
+    if (['ach-4', 'ach-7', 'ach-8'].includes(ach.id)) return 'epic';
+    if (['ach-2', 'ach-3'].includes(ach.id)) return 'rare';
+    if (ach.isCustom) return 'rare';
+    return 'common';
+  };
+
+  const handleShare = (ach: Achievement) => {
+    const card = generateShareCard(ach.title, ach.description);
+    const link = document.createElement('a');
+    link.download = `achievement-${ach.title}.png`;
+    link.href = card;
+    link.click();
+  };
 
   const achievementTiers = [
     { title: '起步', achievements: defaultAchievements.filter(a => ['ach-1', 'ach-5', 'ach-6'].includes(a.id)) },

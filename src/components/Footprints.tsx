@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { User, loadData, saveData, generateId, Photo, calculateLevel, getLevelLabel } from '../store';
 import { CameraAnimation } from './CameraAnimation';
+import { DEFAULT_TAGS, generateExif, compressImage } from '../utils';
 
 interface FootprintsProps {
   user: User;
@@ -21,13 +22,17 @@ export const Footprints: React.FC<FootprintsProps> = ({ user, onDataUpdate }) =>
   const level = calculateLevel(userPhotos.length, avgScore);
 
   const handleCameraComplete = (imageData: string) => {
+    const exif = generateExif(new Date().toISOString());
     const photo: Photo = {
       id: generateId(),
       src: imageData,
       caption: 'Canon EOS R50 拍摄',
       score: 0,
       date: new Date().toISOString(),
-      username: user.username
+      username: user.username,
+      tags: [],
+      diary: '',
+      exif
     };
     data.photos.push(photo);
     const ach = data.achievements.find(a => a.id === 'ach-3' && a.username === user.username);
@@ -41,29 +46,52 @@ export const Footprints: React.FC<FootprintsProps> = ({ user, onDataUpdate }) =>
     onDataUpdate();
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const result = ev.target?.result as string;
-        const photo: Photo = {
-          id: generateId(),
-          src: result,
-          caption: '摄影作品',
-          score: 0,
-          date: new Date().toISOString(),
-          username: user.username
-        };
-        data.photos.push(photo);
-        const ach = data.achievements.find(a => a.id === 'ach-3' && a.username === user.username);
-        if (ach && !ach.unlocked) ach.unlocked = true;
-        saveData(data);
-        onDataUpdate();
+      const compressed = await compressImage(file);
+      const exif = generateExif(new Date().toISOString());
+      const photo: Photo = {
+        id: generateId(),
+        src: compressed,
+        caption: '摄影作品',
+        score: 0,
+        date: new Date().toISOString(),
+        username: user.username,
+        tags: [],
+        diary: '',
+        exif
       };
-      reader.readAsDataURL(file);
+      data.photos.push(photo);
+      const ach = data.achievements.find(a => a.id === 'ach-3' && a.username === user.username);
+      if (ach && !ach.unlocked) ach.unlocked = true;
+      saveData(data);
+      onDataUpdate();
     }
     setShowUpload(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const compressed = await compressImage(file);
+      const exif = generateExif(new Date().toISOString());
+      const photo: Photo = {
+        id: generateId(),
+        src: compressed,
+        caption: '摄影作品',
+        score: 0,
+        date: new Date().toISOString(),
+        username: user.username,
+        tags: [],
+        diary: '',
+        exif
+      };
+      data.photos.push(photo);
+      saveData(data);
+      onDataUpdate();
+    }
   };
 
   const handleScore = (photo: Photo, score: number) => {
@@ -158,6 +186,16 @@ export const Footprints: React.FC<FootprintsProps> = ({ user, onDataUpdate }) =>
           </div>
         )}
 
+        {/* Drop Zone */}
+        <div 
+          className="mb-6 border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-gray-400 transition-colors cursor-pointer"
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={handleDrop}
+          onClick={() => setShowUpload(true)}
+        >
+          <p className="text-gray-400 text-sm">拖拽照片到此处上传，或点击选择文件</p>
+        </div>
+
         {/* Photo Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {userPhotos.map(photo => (
@@ -175,15 +213,33 @@ export const Footprints: React.FC<FootprintsProps> = ({ user, onDataUpdate }) =>
               </div>
               <div className="p-4">
                 <p className="text-gray-700 text-sm mb-1">{photo.caption}</p>
-                <p className="text-gray-400 text-xs mb-3">
+                <p className="text-gray-400 text-xs mb-2">
                   {new Date(photo.date).toLocaleDateString('zh-CN')}
                 </p>
+                {photo.tags && photo.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {photo.tags.map((tag, i) => (
+                      <span key={i} className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {photo.diary && (
+                  <p className="text-gray-500 text-xs mb-2 line-clamp-2">{photo.diary}</p>
+                )}
                 <div className="flex gap-2">
                   <button
                     onClick={() => { setSelectedPhoto(photo); setScoreValue(photo.score || 5); }}
                     className="flex-1 px-3 py-1.5 bg-gray-900 text-white text-xs rounded-lg font-medium hover:bg-gray-800 transition-colors"
                   >
                     评分
+                  </button>
+                  <button
+                    onClick={() => { setSelectedPhoto(photo); setScoreValue(photo.score || 5); }}
+                    className="px-3 py-1.5 bg-gray-100 text-gray-600 text-xs rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    详情
                   </button>
                   {user.isAdmin && (
                     <button
@@ -206,12 +262,29 @@ export const Footprints: React.FC<FootprintsProps> = ({ user, onDataUpdate }) =>
           </div>
         )}
 
-        {/* Score Modal */}
+        {/* Detail Modal */}
         {selectedPhoto && (
-          <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl p-6 border border-gray-100 w-full max-w-sm shadow-lg">
-              <h3 className="text-gray-900 text-sm font-medium mb-4">为作品评分</h3>
-              <img src={selectedPhoto.src} alt="" className="w-full h-28 object-cover rounded-lg mb-4" />
+          <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-white rounded-xl p-6 border border-gray-100 w-full max-w-lg shadow-lg my-8 max-h-[90vh] overflow-y-auto">
+              <h3 className="text-gray-900 text-sm font-medium mb-4">作品详情</h3>
+              <img src={selectedPhoto.src} alt="" className="w-full h-40 object-cover rounded-lg mb-4" />
+              
+              {/* EXIF Info */}
+              {selectedPhoto.exif && (
+                <div className="bg-gray-50 rounded-lg p-3 mb-4 border border-gray-100">
+                  <p className="text-xs text-gray-500 font-medium mb-2">拍摄参数</p>
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div><span className="text-gray-400">机身</span><br/><span className="text-gray-700">{selectedPhoto.exif.camera}</span></div>
+                    <div><span className="text-gray-400">镜头</span><br/><span className="text-gray-700">{selectedPhoto.exif.lens}</span></div>
+                    <div><span className="text-gray-400">焦距</span><br/><span className="text-gray-700">{selectedPhoto.exif.focalLength}</span></div>
+                    <div><span className="text-gray-400">光圈</span><br/><span className="text-gray-700">{selectedPhoto.exif.aperture}</span></div>
+                    <div><span className="text-gray-400">快门</span><br/><span className="text-gray-700">{selectedPhoto.exif.shutterSpeed}</span></div>
+                    <div><span className="text-gray-400">ISO</span><br/><span className="text-gray-700">{selectedPhoto.exif.iso}</span></div>
+                  </div>
+                </div>
+              )}
+
+              {/* Score */}
               <div className="mb-4">
                 <label className="text-gray-500 text-xs mb-2 block">评分: {scoreValue}/10</label>
                 <input
@@ -222,12 +295,63 @@ export const Footprints: React.FC<FootprintsProps> = ({ user, onDataUpdate }) =>
                   onChange={e => setScoreValue(Number(e.target.value))}
                   className="w-full accent-gray-900"
                 />
-                <div className="flex justify-between text-xs text-gray-400 mt-1">
-                  <span>1</span>
-                  <span>5</span>
-                  <span>10</span>
+              </div>
+
+              {/* Tags */}
+              <div className="mb-4">
+                <label className="text-gray-500 text-xs mb-2 block">标签</label>
+                <div className="flex flex-wrap gap-1">
+                  {DEFAULT_TAGS.map(tag => {
+                    const isSelected = selectedPhoto.tags?.includes(tag);
+                    return (
+                      <button
+                        key={tag}
+                        onClick={() => {
+                          const data = loadData();
+                          const idx = data.photos.findIndex(p => p.id === selectedPhoto.id);
+                          if (idx !== -1) {
+                            const tags = data.photos[idx].tags || [];
+                            if (isSelected) {
+                              data.photos[idx].tags = tags.filter(t => t !== tag);
+                            } else {
+                              data.photos[idx].tags = [...tags, tag];
+                            }
+                            saveData(data);
+                            setSelectedPhoto(data.photos[idx]);
+                            onDataUpdate();
+                          }
+                        }}
+                        className={`text-xs px-2 py-1 rounded transition-colors ${
+                          isSelected ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
+
+              {/* Diary */}
+              <div className="mb-4">
+                <label className="text-gray-500 text-xs mb-2 block">摄影日记</label>
+                <textarea
+                  value={selectedPhoto.diary || ''}
+                  onChange={e => {
+                    const data = loadData();
+                    const idx = data.photos.findIndex(p => p.id === selectedPhoto.id);
+                    if (idx !== -1) {
+                      data.photos[idx].diary = e.target.value;
+                      saveData(data);
+                      setSelectedPhoto({ ...selectedPhoto, diary: e.target.value });
+                    }
+                  }}
+                  placeholder="记录拍摄时的故事和感受..."
+                  rows={3}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-gray-900 text-sm focus:border-gray-400 focus:outline-none resize-none"
+                />
+              </div>
+
               <div className="flex gap-2">
                 <button
                   onClick={() => handleScore(selectedPhoto, scoreValue)}

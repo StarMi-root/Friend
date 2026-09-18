@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, loadData, saveData, generateId, getBirthdayAge, getCakePercentage, Wish } from '../store';
 import { CameraAnimation } from './CameraAnimation';
+import { getGifts, saveGift, deleteGift, Gift } from '../utils';
 
 interface BirthdayProps {
   user: User;
@@ -14,12 +15,64 @@ export const Birthday: React.FC<BirthdayProps> = ({ user, onDataUpdate }) => {
   const [blowingCandles, setBlowingCandles] = useState(false);
   const [candlesLit, setCandlesLit] = useState(true);
   const [birthdayPhotos, setBirthdayPhotos] = useState<string[]>([]);
+  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [gifts, setGifts] = useState<Gift[]>(getGifts(user.username));
+  const [showAddGift, setShowAddGift] = useState(false);
+  const [giftName, setGiftName] = useState('');
+  const [giftType, setGiftType] = useState<'received' | 'wanted'>('wanted');
+  const [giftFrom, setGiftFrom] = useState('');
 
   const data = loadData();
   const userWishes = data.wishes.filter(w => w.username === user.username);
   const age = getBirthdayAge(user.birthday);
   const cakePercentage = getCakePercentage(user.birthday);
   const candleCount = Math.min(age ?? 0, 20);
+
+  // Countdown timer
+  useEffect(() => {
+    const updateCountdown = () => {
+      const parts = user.birthday.split('-');
+      const month = parseInt(parts.length === 3 ? parts[1] : parts[0]);
+      const day = parseInt(parts.length === 3 ? parts[2] : parts[1]);
+      const now = new Date();
+      let nextBirthday = new Date(now.getFullYear(), month - 1, day);
+      if (now >= nextBirthday) {
+        nextBirthday = new Date(now.getFullYear() + 1, month - 1, day);
+      }
+      const diff = nextBirthday.getTime() - now.getTime();
+      setCountdown({
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((diff % (1000 * 60)) / 1000)
+      });
+    };
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [user.birthday]);
+
+  const handleAddGift = () => {
+    if (!giftName.trim()) return;
+    const gift: Gift = {
+      id: generateId(),
+      name: giftName,
+      type: giftType,
+      from: giftFrom || undefined,
+      date: new Date().toISOString(),
+      username: user.username
+    };
+    saveGift(gift);
+    setGifts(getGifts(user.username));
+    setGiftName('');
+    setGiftFrom('');
+    setShowAddGift(false);
+  };
+
+  const handleDeleteGift = (id: string) => {
+    deleteGift(id);
+    setGifts(getGifts(user.username));
+  };
 
   const handleMakeWish = () => {
     if (!wishText.trim()) return;
@@ -88,6 +141,29 @@ export const Birthday: React.FC<BirthdayProps> = ({ user, onDataUpdate }) => {
         <div className="mb-10">
           <h1 className="text-2xl font-light text-gray-900">生日快乐</h1>
           <p className="text-gray-400 text-sm mt-1">{age !== null ? `今天是你的 ${age} 岁生日` : '生日快乐'}</p>
+        </div>
+
+        {/* Countdown */}
+        <div className="bg-gray-50 rounded-xl p-6 border border-gray-100 mb-8">
+          <h3 className="text-gray-900 text-sm font-medium mb-4">距离下次生日</h3>
+          <div className="grid grid-cols-4 gap-3 text-center">
+            <div className="bg-white rounded-lg p-3 border border-gray-100">
+              <div className="text-xl font-light text-gray-900">{countdown.days}</div>
+              <div className="text-gray-400 text-xs">天</div>
+            </div>
+            <div className="bg-white rounded-lg p-3 border border-gray-100">
+              <div className="text-xl font-light text-gray-900">{countdown.hours}</div>
+              <div className="text-gray-400 text-xs">时</div>
+            </div>
+            <div className="bg-white rounded-lg p-3 border border-gray-100">
+              <div className="text-xl font-light text-gray-900">{countdown.minutes}</div>
+              <div className="text-gray-400 text-xs">分</div>
+            </div>
+            <div className="bg-white rounded-lg p-3 border border-gray-100">
+              <div className="text-xl font-light text-gray-900">{countdown.seconds}</div>
+              <div className="text-gray-400 text-xs">秒</div>
+            </div>
+          </div>
         </div>
 
         {/* Cake Section */}
@@ -229,6 +305,96 @@ export const Birthday: React.FC<BirthdayProps> = ({ user, onDataUpdate }) => {
             <p className="text-gray-400 text-sm text-center py-8">还没有许过愿望</p>
           )}
         </div>
+
+        {/* Gift List */}
+        <div className="bg-gray-50 rounded-xl p-6 border border-gray-100 mt-8">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-gray-900 text-sm font-medium">礼物清单</h3>
+            <button
+              onClick={() => setShowAddGift(true)}
+              className="px-3 py-1 bg-gray-900 text-white rounded-lg text-xs font-medium hover:bg-gray-800"
+            >
+              添加
+            </button>
+          </div>
+          
+          <div className="space-y-2">
+            {gifts.filter(g => g.type === 'wanted').length > 0 && (
+              <div>
+                <p className="text-xs text-gray-400 mb-2">想要的礼物</p>
+                {gifts.filter(g => g.type === 'wanted').map(gift => (
+                  <div key={gift.id} className="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-100 mb-1">
+                    <span className="text-sm text-gray-700">{gift.name}</span>
+                    <button onClick={() => handleDeleteGift(gift.id)} className="text-xs text-gray-400 hover:text-red-500">删除</button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {gifts.filter(g => g.type === 'received').length > 0 && (
+              <div className="mt-3">
+                <p className="text-xs text-gray-400 mb-2">收到的礼物</p>
+                {gifts.filter(g => g.type === 'received').map(gift => (
+                  <div key={gift.id} className="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-100 mb-1">
+                    <div>
+                      <span className="text-sm text-gray-700">{gift.name}</span>
+                      {gift.from && <span className="text-xs text-gray-400 ml-2">来自 {gift.from}</span>}
+                    </div>
+                    <button onClick={() => handleDeleteGift(gift.id)} className="text-xs text-gray-400 hover:text-red-500">删除</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {gifts.length === 0 && (
+            <p className="text-gray-400 text-sm text-center py-4">还没有礼物记录</p>
+          )}
+        </div>
+
+        {/* Add Gift Modal */}
+        {showAddGift && (
+          <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl p-6 border border-gray-100 w-full max-w-sm shadow-lg">
+              <h3 className="text-gray-900 text-sm font-medium mb-4">添加礼物</h3>
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  value={giftName}
+                  onChange={e => setGiftName(e.target.value)}
+                  placeholder="礼物名称"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-gray-900 text-sm focus:border-gray-400 focus:outline-none"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setGiftType('wanted')}
+                    className={`flex-1 py-2 rounded-lg text-sm ${giftType === 'wanted' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600'}`}
+                  >
+                    想要
+                  </button>
+                  <button
+                    onClick={() => setGiftType('received')}
+                    className={`flex-1 py-2 rounded-lg text-sm ${giftType === 'received' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600'}`}
+                  >
+                    收到
+                  </button>
+                </div>
+                {giftType === 'received' && (
+                  <input
+                    type="text"
+                    value={giftFrom}
+                    onChange={e => setGiftFrom(e.target.value)}
+                    placeholder="送礼人（可选）"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-gray-900 text-sm focus:border-gray-400 focus:outline-none"
+                  />
+                )}
+              </div>
+              <div className="flex gap-2 mt-4">
+                <button onClick={handleAddGift} className="flex-1 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800">添加</button>
+                <button onClick={() => setShowAddGift(false)} className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200">取消</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

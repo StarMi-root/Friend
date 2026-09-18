@@ -20,6 +20,16 @@ export interface Photo {
   score: number;
   date: string;
   username: string;
+  tags?: string[];
+  diary?: string;
+  exif?: {
+    camera: string;
+    lens: string;
+    focalLength: string;
+    aperture: string;
+    shutterSpeed: string;
+    iso: string;
+  };
 }
 
 export interface Friend {
