@@ -163,11 +163,11 @@ export function getLevelLabel(level: number): string {
 }
 
 export function calculateLevel(count: number, avgScore: number): number {
-  const score = count * 2 + avgScore * 5;
-  if (score >= 50) return 6;
-  if (score >= 35) return 5;
-  if (score >= 25) return 4;
-  if (score >= 15) return 3;
-  if (score >= 5) return 2;
+  const score = count * 1 + avgScore * 3;
+  if (score >= 100) return 6;
+  if (score >= 70) return 5;
+  if (score >= 45) return 4;
+  if (score >= 25) return 3;
+  if (score >= 10) return 2;
   return 1;
 }
