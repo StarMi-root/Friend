@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, loadData, setCurrentUser, getCurrentUser, saveData } from './store';
+import { User, loadData, setCurrentUser, getCurrentUser, saveData, clearAllData } from './store';
 import { Login } from './components/Login';
 import { Home } from './components/Home';
 import { Birthday } from './components/Birthday';
@@ -36,6 +36,15 @@ function App() {
 
   const handleNavigate = (page: string) => {
     setCurrentPage(page);
+  };
+
+  const handleResetAll = () => {
+    if (confirm('确定要删除所有用户数据吗？此操作不可恢复。')) {
+      clearAllData();
+      setUser(null);
+      setCurrentPage('home');
+      window.location.reload();
+    }
   };
 
   if (!user) {
@@ -113,12 +122,20 @@ function App() {
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-xl font-light text-gray-900">管理员面板</h1>
-            <button
-              onClick={() => setShowAdmin(false)}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200"
-            >
-              返回
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={handleResetAll}
+                className="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm hover:bg-red-100 border border-red-200"
+              >
+                重置所有数据
+              </button>
+              <button
+                onClick={() => setShowAdmin(false)}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200"
+              >
+                返回
+              </button>
+            </div>
           </div>
 
           {/* Admin Tabs */}

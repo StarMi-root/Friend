@@ -71,6 +71,11 @@ export function loadData(): AppData {
   return { ...DEFAULT_DATA };
 }
 
+export function clearAllData(): void {
+  localStorage.removeItem('friendship-app-data');
+  localStorage.removeItem('current-user');
+}
+
 export function saveData(data: AppData): void {
   localStorage.setItem('friendship-app-data', JSON.stringify(data));
 }
