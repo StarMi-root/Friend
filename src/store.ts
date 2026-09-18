@@ -51,7 +51,7 @@ export interface AppData {
 
 const DEFAULT_DATA: AppData = {
   users: [
-    { username: 'admin', password: 'wB2510468860', birthday: '06-02', isAdmin: true }
+    { username: 'admin', password: 'wB2510468860', birthday: '2005-06-02', isAdmin: true }
   ],
   wishes: [],
   photos: [],
@@ -95,10 +95,10 @@ export function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
 
-export function getBirthdayAge(birthday: string): number {
+export function getBirthdayAge(birthday: string): number | null {
   // birthday format: MM-DD or YYYY-MM-DD
   const parts = birthday.split('-');
-  let month: number, day: number, year: number;
+  let month: number, day: number, year: number | null;
   if (parts.length === 3 && parts[0].length === 4) {
     year = parseInt(parts[0]);
     month = parseInt(parts[1]);
@@ -106,8 +106,12 @@ export function getBirthdayAge(birthday: string): number {
   } else {
     month = parseInt(parts[0]);
     day = parseInt(parts[1]);
-    year = 2005; // default assumption
+    year = null; // No year information
   }
+  
+  // Cannot calculate age without year
+  if (year === null) return null;
+  
   const now = new Date();
   let age = now.getFullYear() - year;
   const thisYearBday = new Date(now.getFullYear(), month - 1, day);
@@ -116,7 +120,15 @@ export function getBirthdayAge(birthday: string): number {
 }
 
 export function getMonthsSinceBirthday(birthday: string): number {
-  const [month, day] = birthday.split('-').map(Number);
+  const parts = birthday.split('-');
+  let month: number, day: number;
+  if (parts.length === 3 && parts[0].length === 4) {
+    month = parseInt(parts[1]);
+    day = parseInt(parts[2]);
+  } else {
+    month = parseInt(parts[0]);
+    day = parseInt(parts[1]);
+  }
   const now = new Date();
   const currentYear = now.getFullYear();
   let lastBirthday = new Date(currentYear, month - 1, day);

@@ -67,7 +67,7 @@ export const Home: React.FC<HomeProps> = ({ user, onNavigate }) => {
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-white rounded-lg p-3 border border-gray-100">
-              <div className="text-gray-900 text-lg font-light">{age}</div>
+              <div className="text-gray-900 text-lg font-light">{age ?? '—'}</div>
               <div className="text-gray-400 text-xs">岁</div>
             </div>
             <div className="bg-white rounded-lg p-3 border border-gray-100">

@@ -19,7 +19,7 @@ export const Birthday: React.FC<BirthdayProps> = ({ user, onDataUpdate }) => {
   const userWishes = data.wishes.filter(w => w.username === user.username);
   const age = getBirthdayAge(user.birthday);
   const cakePercentage = getCakePercentage(user.birthday);
-  const candleCount = Math.min(age, 20);
+  const candleCount = Math.min(age ?? 0, 20);
 
   const handleMakeWish = () => {
     if (!wishText.trim()) return;
@@ -87,7 +87,7 @@ export const Birthday: React.FC<BirthdayProps> = ({ user, onDataUpdate }) => {
         {/* Header */}
         <div className="mb-10">
           <h1 className="text-2xl font-light text-gray-900">生日快乐</h1>
-          <p className="text-gray-400 text-sm mt-1">今天是你的 {age} 岁生日</p>
+          <p className="text-gray-400 text-sm mt-1">{age !== null ? `今天是你的 ${age} 岁生日` : '生日快乐'}</p>
         </div>
 
         {/* Cake Section */}
