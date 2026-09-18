@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, loadData, saveData, generateId, Friend, Photo, calculateLevel, getLevelLabel } from '../store';
+import { User, loadData, saveData, generateId, Friend, Photo, getLevelLabel } from '../store';
 import { CameraAnimation } from './CameraAnimation';
 
 interface FriendWallProps {
@@ -112,7 +112,14 @@ export const FriendWall: React.FC<FriendWallProps> = ({ user, onDataUpdate }) =>
   const getFriendLevel = (friend: Friend): number => {
     const count = friend.photos.length;
     const avgScore = count > 0 ? friend.photos.reduce((s, p) => s + p.score, 0) / count : 0;
-    return calculateLevel(count, avgScore);
+    // 友谊等级升级更缓慢
+    const score = count * 0.5 + avgScore * 2;
+    if (score >= 100) return 6;
+    if (score >= 70) return 5;
+    if (score >= 45) return 4;
+    if (score >= 25) return 3;
+    if (score >= 10) return 2;
+    return 1;
   };
 
   // Friend detail view
