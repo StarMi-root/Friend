@@ -18,6 +18,11 @@ function App() {
   const [showAdmin, setShowAdmin] = useState(false);
   const [adminTab, setAdminTab] = useState('users');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [darkMode, setDarkMode] = useState(isDarkMode());
+  const [lang, setLangState] = useState<Lang>(getLang());
 
   useEffect(() => {
     const saved = getCurrentUser();
@@ -83,6 +88,17 @@ function App() {
       setCurrentPage('home');
       window.location.reload();
     }
+  };
+
+  const handleToggleDarkMode = () => {
+    const isDark = toggleDarkMode();
+    setDarkMode(isDark);
+  };
+
+  const handleToggleLang = () => {
+    const newLang: Lang = lang === 'zh' ? 'en' : 'zh';
+    setLang(newLang);
+    setLangState(newLang);
   };
 
   if (!user) {
@@ -677,23 +693,6 @@ function App() {
   if (showAdmin) {
     return <AdminPanel />;
   }
-
-  const [showSearch, setShowSearch] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [darkMode, setDarkMode] = useState(isDarkMode());
-  const [lang, setLangState] = useState<Lang>(getLang());
-
-  const handleToggleDarkMode = () => {
-    const isDark = toggleDarkMode();
-    setDarkMode(isDark);
-  };
-
-  const handleToggleLang = () => {
-    const newLang: Lang = lang === 'zh' ? 'en' : 'zh';
-    setLang(newLang);
-    setLangState(newLang);
-  };
 
   const notifications = getNotifications();
   const unreadCount = notifications.filter(n => !n.read).length;
