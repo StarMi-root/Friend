@@ -51,7 +51,7 @@ export interface AppData {
 
 const DEFAULT_DATA: AppData = {
   users: [
-    { username: 'admin', password: 'wB2510468860', birthday: '2005-06-02', isAdmin: true }
+    { username: 'admin', password: 'wB2510468860', birthday: '2012-06-02', isAdmin: true }
   ],
   wishes: [],
   photos: [],
