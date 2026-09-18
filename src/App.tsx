@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, loadData, setCurrentUser, getCurrentUser, saveData, clearAllData } from './store';
+import { User, loadData, setCurrentUser, getCurrentUser, saveData, clearAllData, exportData, importData } from './store';
 import { Login } from './components/Login';
 import { Home } from './components/Home';
 import { Birthday } from './components/Birthday';
@@ -123,7 +123,46 @@ function App() {
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-xl font-light text-gray-900">管理员面板</h1>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
+              <button
+                onClick={() => {
+                  const data = exportData();
+                  const blob = new Blob([data], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `friendship-app-backup-${new Date().toISOString().split('T')[0]}.json`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                className="px-4 py-2 bg-green-50 text-green-600 rounded-lg text-sm hover:bg-green-100 border border-green-200"
+              >
+                导出数据
+              </button>
+              <label className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm hover:bg-blue-100 border border-blue-200 cursor-pointer">
+                导入数据
+                <input
+                  type="file"
+                  accept=".json"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        const result = ev.target?.result as string;
+                        if (importData(result)) {
+                          alert('数据导入成功！');
+                          window.location.reload();
+                        } else {
+                          alert('数据导入失败，文件格式不正确。');
+                        }
+                      };
+                      reader.readAsText(file);
+                    }
+                  }}
+                />
+              </label>
               <button
                 onClick={handleResetAll}
                 className="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm hover:bg-red-100 border border-red-200"

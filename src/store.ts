@@ -76,6 +76,25 @@ export function clearAllData(): void {
   localStorage.removeItem('current-user');
 }
 
+export function exportData(): string {
+  const data = loadData();
+  return JSON.stringify(data, null, 2);
+}
+
+export function importData(jsonString: string): boolean {
+  try {
+    const data = JSON.parse(jsonString);
+    if (data.users && data.wishes && data.photos && data.friends && data.achievements) {
+      localStorage.setItem('friendship-app-data', jsonString);
+      return true;
+    }
+    return false;
+  } catch (e) {
+    console.error('Failed to import data', e);
+    return false;
+  }
+}
+
 export function saveData(data: AppData): void {
   localStorage.setItem('friendship-app-data', JSON.stringify(data));
 }
