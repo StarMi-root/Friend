@@ -58,6 +58,7 @@ function App() {
     const [editingUser, setEditingUser] = useState<string | null>(null);
     const [editUsername, setEditUsername] = useState('');
     const [editBirthday, setEditBirthday] = useState('');
+    const [viewingUser, setViewingUser] = useState<string | null>(null);
 
     const allUsers = data.users.filter(u => !u.isAdmin);
     const allPhotos = data.photos;
@@ -169,6 +170,12 @@ function App() {
                   </div>
                   <div className="flex gap-2">
                     <button
+                      onClick={() => setViewingUser(u.username)}
+                      className="px-3 py-1 bg-blue-50 text-blue-600 text-xs rounded-lg hover:bg-blue-100 border border-blue-200"
+                    >
+                      查看详情
+                    </button>
+                    <button
                       onClick={() => handleEditUser(u.username)}
                       className="px-3 py-1 bg-gray-900 text-white text-xs rounded-lg hover:bg-gray-800"
                     >
@@ -248,6 +255,110 @@ function App() {
                 </div>
               ))}
               {allWishes.length === 0 && <p className="text-gray-400 text-sm text-center py-8">暂无愿望</p>}
+            </div>
+          )}
+
+          {/* User Detail View */}
+          {viewingUser && (
+            <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4 overflow-y-auto">
+              <div className="bg-white rounded-xl p-6 border border-gray-100 w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-lg my-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-gray-900 text-lg font-medium">用户详情 - {viewingUser}</h3>
+                  <button
+                    onClick={() => setViewingUser(null)}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200"
+                  >
+                    关闭
+                  </button>
+                </div>
+
+                {/* User Info */}
+                <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-100">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-500">用户名：</span>
+                      <span className="text-gray-900 font-medium">{viewingUser}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">生日：</span>
+                      <span className="text-gray-900 font-medium">
+                        {data.users.find(u => u.username === viewingUser)?.birthday}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Photos */}
+                <div className="mb-6">
+                  <h4 className="text-gray-900 text-sm font-medium mb-3">摄影作品 ({data.photos.filter(p => p.username === viewingUser).length})</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {data.photos.filter(p => p.username === viewingUser).map(photo => (
+                      <div key={photo.id} className="bg-gray-50 rounded-lg overflow-hidden border border-gray-100">
+                        <img src={photo.src} alt={photo.caption} className="w-full h-28 object-cover" />
+                        <div className="p-2">
+                          <p className="text-gray-700 text-xs truncate">{photo.caption}</p>
+                          <p className="text-gray-400 text-xs">评分: {photo.score}/10</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {data.photos.filter(p => p.username === viewingUser).length === 0 && (
+                    <p className="text-gray-400 text-xs text-center py-4">暂无摄影作品</p>
+                  )}
+                </div>
+
+                {/* Wishes */}
+                <div className="mb-6">
+                  <h4 className="text-gray-900 text-sm font-medium mb-3">许愿 ({data.wishes.filter(w => w.username === viewingUser).length})</h4>
+                  <div className="space-y-2">
+                    {data.wishes.filter(w => w.username === viewingUser).map(wish => (
+                      <div key={wish.id} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                        <p className="text-gray-700 text-sm">{wish.text}</p>
+                        <p className="text-gray-400 text-xs mt-1">{new Date(wish.date).toLocaleDateString()}</p>
+                      </div>
+                    ))}
+                  </div>
+                  {data.wishes.filter(w => w.username === viewingUser).length === 0 && (
+                    <p className="text-gray-400 text-xs text-center py-4">暂无愿望</p>
+                  )}
+                </div>
+
+                {/* Friends */}
+                <div className="mb-6">
+                  <h4 className="text-gray-900 text-sm font-medium mb-3">好友 ({data.friends.filter(f => f.username === viewingUser).length})</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {data.friends.filter(f => f.username === viewingUser).map(friend => (
+                      <div key={friend.id} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                        <p className="text-gray-900 text-sm font-medium">{friend.name}</p>
+                        <p className="text-gray-400 text-xs">分组: {friend.group}</p>
+                        <p className="text-gray-400 text-xs">合照: {friend.photos.length} 张</p>
+                      </div>
+                    ))}
+                  </div>
+                  {data.friends.filter(f => f.username === viewingUser).length === 0 && (
+                    <p className="text-gray-400 text-xs text-center py-4">暂无好友</p>
+                  )}
+                </div>
+
+                {/* Achievements */}
+                <div>
+                  <h4 className="text-gray-900 text-sm font-medium mb-3">成就 ({data.achievements.filter(a => a.username === viewingUser && a.unlocked).length}/{data.achievements.filter(a => a.username === viewingUser).length})</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {data.achievements.filter(a => a.username === viewingUser).map(ach => (
+                      <div key={ach.id} className={`rounded-lg p-3 border ${ach.unlocked ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100 opacity-50'}`}>
+                        <p className={`text-sm font-medium ${ach.unlocked ? 'text-gray-900' : 'text-gray-400'}`}>{ach.title}</p>
+                        <p className={`text-xs mt-0.5 ${ach.unlocked ? 'text-gray-500' : 'text-gray-300'}`}>{ach.description}</p>
+                        <p className={`text-xs mt-1 ${ach.unlocked ? 'text-green-600' : 'text-gray-400'}`}>
+                          {ach.unlocked ? '已解锁' : '未解锁'}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  {data.achievements.filter(a => a.username === viewingUser).length === 0 && (
+                    <p className="text-gray-400 text-xs text-center py-4">暂无成就</p>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
