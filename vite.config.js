@@ -4,6 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  base: '/friendship-app/', // 修改为你的仓库名
   server: {
     host: "0.0.0.0",
     port: 3000,
@@ -11,5 +12,9 @@ export default defineConfig({
     hmr: {
       port: 3000,
     },
+  },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
   },
 });
