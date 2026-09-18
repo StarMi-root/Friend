@@ -16,10 +16,14 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     const data = loadData();
     const user = data.users.find(u => u.username === username && u.password === password);
     if (user) {
+      // Extract MM-DD from stored birthday (could be YYYY-MM-DD or MM-DD)
       const storedParts = user.birthday.split('-');
       const bMonth = storedParts.length === 3 ? storedParts[1] : storedParts[0];
       const bDay = storedParts.length === 3 ? storedParts[2] : storedParts[1];
-      const [inputMonth, inputDay] = birthday.split('-');
+      // Extract MM-DD from input birthday (now YYYY-MM-DD format)
+      const inputParts = birthday.split('-');
+      const inputMonth = inputParts.length === 3 ? inputParts[1] : inputParts[0];
+      const inputDay = inputParts.length === 3 ? inputParts[2] : inputParts[1];
       if (bMonth === inputMonth && bDay === inputDay) {
         setCurrentUser(user);
         onLogin(user);
@@ -108,9 +112,25 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 <select
                   value={birthday ? birthday.split('-')[0] : ''}
                   onChange={e => {
+                    const year = e.target.value;
+                    const parts = birthday ? birthday.split('-') : ['', '01', '01'];
+                    setBirthday(year ? `${year}-${parts[1]}-${parts[2]}` : '');
+                    setError('');
+                  }}
+                  className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-gray-900 text-sm focus:border-gray-400 focus:outline-none focus:bg-white transition-all"
+                >
+                  <option value="">年份</option>
+                  {Array.from({ length: 50 }, (_, i) => {
+                    const y = String(2025 - i);
+                    return <option key={y} value={y}>{y} 年</option>;
+                  })}
+                </select>
+                <select
+                  value={birthday ? birthday.split('-')[1] : ''}
+                  onChange={e => {
                     const month = e.target.value;
-                    const day = birthday ? birthday.split('-')[1] : '01';
-                    setBirthday(month ? `${month}-${day}` : '');
+                    const parts = birthday ? birthday.split('-') : ['2000', '', '01'];
+                    setBirthday(month ? `${parts[0]}-${month}-${parts[2]}` : '');
                     setError('');
                   }}
                   className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-gray-900 text-sm focus:border-gray-400 focus:outline-none focus:bg-white transition-all"
@@ -122,11 +142,11 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   })}
                 </select>
                 <select
-                  value={birthday ? birthday.split('-')[1] : ''}
+                  value={birthday ? birthday.split('-')[2] : ''}
                   onChange={e => {
                     const day = e.target.value;
-                    const month = birthday ? birthday.split('-')[0] : '01';
-                    setBirthday(day ? `${month}-${day}` : '');
+                    const parts = birthday ? birthday.split('-') : ['2000', '01', ''];
+                    setBirthday(day ? `${parts[0]}-${parts[1]}-${day}` : '');
                     setError('');
                   }}
                   className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-gray-900 text-sm focus:border-gray-400 focus:outline-none focus:bg-white transition-all"
