@@ -104,19 +104,40 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </div>
             <div>
               <label className="text-gray-500 text-xs mb-1.5 block font-medium">生日</label>
-              <input
-                type="date"
-                value={birthday ? `2000-${birthday}` : ''}
-                onChange={e => {
-                  const d = e.target.value;
-                  if (d) {
-                    const parts = d.split('-');
-                    setBirthday(`${parts[1]}-${parts[2]}`);
-                  }
-                  setError('');
-                }}
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-gray-900 text-sm focus:border-gray-400 focus:outline-none focus:bg-white transition-all"
-              />
+              <div className="flex gap-2">
+                <select
+                  value={birthday ? birthday.split('-')[0] : ''}
+                  onChange={e => {
+                    const month = e.target.value;
+                    const day = birthday ? birthday.split('-')[1] : '01';
+                    setBirthday(month ? `${month}-${day}` : '');
+                    setError('');
+                  }}
+                  className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-gray-900 text-sm focus:border-gray-400 focus:outline-none focus:bg-white transition-all"
+                >
+                  <option value="">月份</option>
+                  {Array.from({ length: 12 }, (_, i) => {
+                    const m = String(i + 1).padStart(2, '0');
+                    return <option key={m} value={m}>{i + 1} 月</option>;
+                  })}
+                </select>
+                <select
+                  value={birthday ? birthday.split('-')[1] : ''}
+                  onChange={e => {
+                    const day = e.target.value;
+                    const month = birthday ? birthday.split('-')[0] : '01';
+                    setBirthday(day ? `${month}-${day}` : '');
+                    setError('');
+                  }}
+                  className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-gray-900 text-sm focus:border-gray-400 focus:outline-none focus:bg-white transition-all"
+                >
+                  <option value="">日期</option>
+                  {Array.from({ length: 31 }, (_, i) => {
+                    const d = String(i + 1).padStart(2, '0');
+                    return <option key={d} value={d}>{i + 1} 日</option>;
+                  })}
+                </select>
+              </div>
             </div>
           </div>
 
