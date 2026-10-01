@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, loadData, setCurrentUser, getCurrentUser, saveData, clearAllData, exportData, importData, syncFromGitHub, syncToGitHub } from './store';
 import { getGitHubConfig, saveGitHubConfig, clearGitHubConfig, isGitHubConfigured, testGitHubConnection, GitHubConfig } from './github-storage';
-import { getDefaultConfig } from './default-config';
 import { initDarkMode, toggleDarkMode, isDarkMode, updateStreak, recordActivity, getNotifications, saveNotifications, getLang, setLang, t, Lang, searchAll } from './utils';
 import { getAIConfig, saveAIConfig, resetAIConfig, testAIConnection, AIConfig } from './ai-service';
 import { Login } from './components/Login';
@@ -69,30 +68,26 @@ function App() {
     setUser(u);
     setCurrentPage('home');
     
-    // 自动配置默认云同步（仅当未配置时）
-    if (!isGitHubConfigured()) {
-      const defaultConfig = getDefaultConfig();
-      saveGitHubConfig(defaultConfig);
-    }
-    
-    // 自动同步数据
-    setTimeout(async () => {
-      try {
-        const { readFromGitHub } = await import('./github-storage');
-        const githubData = await readFromGitHub();
-        if (githubData) {
-          const localData = loadData();
-          const githubTotal = githubData.photos.length + githubData.wishes.length + githubData.friends.length;
-          const localTotal = localData.photos.length + localData.wishes.length + localData.friends.length;
-          if (githubTotal > localTotal) {
-            localStorage.setItem('friendship-app-data', JSON.stringify(githubData));
-            setRefreshKey(k => k + 1);
+    // 如果已配置云同步，自动同步数据
+    if (isGitHubConfigured()) {
+      setTimeout(async () => {
+        try {
+          const { readFromGitHub } = await import('./github-storage');
+          const githubData = await readFromGitHub();
+          if (githubData) {
+            const localData = loadData();
+            const githubTotal = githubData.photos.length + githubData.wishes.length + githubData.friends.length;
+            const localTotal = localData.photos.length + localData.wishes.length + localData.friends.length;
+            if (githubTotal > localTotal) {
+              localStorage.setItem('friendship-app-data', JSON.stringify(githubData));
+              setRefreshKey(k => k + 1);
+            }
           }
+        } catch (e) {
+          console.log('Auto sync skipped:', e);
         }
-      } catch (e) {
-        console.log('Auto sync skipped:', e);
-      }
-    }, 1000);
+      }, 1000);
+    }
   };
 
   const handleLogout = () => {
@@ -220,11 +215,11 @@ function App() {
                   type="password"
                   value={config.token}
                   onChange={e => setConfig({ ...config, token: e.target.value })}
-                  placeholder="ghp_xxxxxxxxxxxx"
+                  placeholder="ghp_xxxxxxxxxxxx 或 github_pat_xxxxxxxxxxxx"
                   className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 text-gray-900 text-sm focus:border-gray-400 focus:outline-none"
                 />
                 <p className="text-gray-400 text-xs mt-1">
-                  系统已自动配置默认 Token，如需修改请输入新的 Token
+                  在 GitHub Settings → Developer settings → Personal access tokens 创建，需要 repo 权限
                 </p>
               </div>
 
