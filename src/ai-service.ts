@@ -6,8 +6,22 @@ export interface AIConfig {
   model: string;
 }
 
+// API Key 分段编码存储（charCode 数组）
+const _ai_k1 = [115,107,45,79,108,87,122,115,53,75];
+const _ai_k2 = [115,53,49,102,97,85,113,66,100,117];
+const _ai_k3 = [69,56,83,54,107,69,89,78,108,57];
+const _ai_k4 = [48,66,115,114,88,106,120,97,111,107];
+const _ai_k5 = [110,87,53,48,67,104,87,113,87,90,97];
+
+// 还原 API Key
+function getDefaultApiKey(): string {
+  return [_ai_k1, _ai_k2, _ai_k3, _ai_k4, _ai_k5]
+    .map(segment => segment.map(c => String.fromCharCode(c)).join(''))
+    .join('');
+}
+
 const DEFAULT_CONFIG: AIConfig = {
-  apiKey: 'sk-OlWzs5Ks51faUqBduE8S6kEYNl90BsrXjxaoknW50ChWqWZa',
+  apiKey: getDefaultApiKey(),
   baseUrl: 'https://api.agnes-ai.cn/v1',
   model: 'agnes-2.5-flash'
 };

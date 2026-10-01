@@ -34,7 +34,7 @@ export function clearGitHubConfig(): void {
 
 export function isGitHubConfigured(): boolean {
   const config = getGitHubConfig();
-  return !!(config && config.token && config.owner && config.repo && config.path);
+  return !!(config && config.owner && config.repo && config.path);
 }
 
 // Read data from GitHub

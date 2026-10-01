@@ -186,6 +186,11 @@ export const CloudSync: React.FC<CloudSyncProps> = ({ user, onDataUpdate }) => {
         <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
           <h3 className="text-gray-900 text-sm font-medium mb-4">云同步配置</h3>
           
+          <div className="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
+            <p className="text-green-800 text-xs font-medium mb-2">自动配置</p>
+            <p className="text-green-700 text-xs">系统已自动配置默认云同步，登录即可使用。如需修改配置，请在下方修改后保存。</p>
+          </div>
+
           <div className="space-y-4">
             <div>
               <label className="text-gray-500 text-xs mb-1.5 block font-medium">GitHub Token</label>
@@ -196,6 +201,9 @@ export const CloudSync: React.FC<CloudSyncProps> = ({ user, onDataUpdate }) => {
                 placeholder="ghp_xxxxxxxxxxxx"
                 className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 text-gray-900 text-sm focus:border-gray-400 focus:outline-none"
               />
+              <p className="text-gray-400 text-xs mt-1">
+                系统已自动配置默认 Token，如需修改请输入新的 Token
+              </p>
             </div>
 
             <div>
@@ -248,13 +256,13 @@ export const CloudSync: React.FC<CloudSyncProps> = ({ user, onDataUpdate }) => {
             </button>
           </div>
 
-          <div className="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-            <p className="text-yellow-800 text-xs font-medium mb-2">配置说明：</p>
-            <ul className="text-yellow-700 text-xs space-y-1">
-              <li>• 系统已自动配置默认云同步，可直接使用</li>
-              <li>• 如需修改，请确保新配置正确后再保存</li>
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <p className="text-blue-800 text-xs font-medium mb-2">配置说明：</p>
+            <ul className="text-blue-700 text-xs space-y-1">
+              <li>• 系统已自动配置默认云同步，登录即可使用</li>
+              <li>• 每次保存数据时会自动同步到 GitHub</li>
+              <li>• 如需修改配置，请在上方修改后点击"保存配置"</li>
               <li>• Token 需要 repo 权限（用于读写仓库内容）</li>
-              <li>• 修改配置后建议点击"测试连接"验证</li>
             </ul>
           </div>
         </div>

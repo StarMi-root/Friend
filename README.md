@@ -128,6 +128,23 @@ npm run preview
 
 ⚠️ **重要提示**：首次登录后请立即修改管理员密码！
 
+## 云同步配置
+
+为了跨设备同步数据，需要配置 GitHub 云同步：
+
+1. 登录后点击顶部导航栏的"云同步"
+2. 点击"使用默认仓库配置"按钮
+3. 在 GitHub 创建 Personal Access Token：
+   - 访问 https://github.com/settings/tokens
+   - 点击 "Generate new token (classic)"
+   - 勾选 `repo` 权限
+   - 复制生成的 Token
+4. 将 Token 填入配置页面
+5. 点击"保存配置"
+6. 点击"测试连接"验证
+
+配置完成后，数据会自动同步到 GitHub 仓库。
+
 ## 项目结构
 
 ```
