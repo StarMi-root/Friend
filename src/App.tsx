@@ -12,6 +12,7 @@ import { Achievements } from './components/Achievements';
 import { ChallengesPage } from './components/ChallengesPage';
 import { TimeCapsulePage } from './components/TimeCapsulePage';
 import { AnnualReportPage } from './components/AnnualReportPage';
+import { CloudSync } from './components/CloudSync';
 
 function App() {
   const [user, setUser] = useState<User | null>(getCurrentUser());
@@ -66,6 +67,36 @@ function App() {
   const handleLogin = (u: User) => {
     setUser(u);
     setCurrentPage('home');
+    
+    // 自动配置默认云同步（仅当未配置时）
+    if (!isGitHubConfigured()) {
+      const defaultConfig: GitHubConfig = {
+        token: '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',
+        owner: 'StarMi-root',
+        repo: 'Friend-save',
+        path: 'data/app-data.json'
+      };
+      saveGitHubConfig(defaultConfig);
+      
+      // 自动同步数据
+      setTimeout(async () => {
+        try {
+          const { readFromGitHub } = await import('./github-storage');
+          const githubData = await readFromGitHub();
+          if (githubData) {
+            const localData = loadData();
+            const githubTotal = githubData.photos.length + githubData.wishes.length + githubData.friends.length;
+            const localTotal = localData.photos.length + localData.wishes.length + localData.friends.length;
+            if (githubTotal > localTotal) {
+              localStorage.setItem('friendship-app-data', JSON.stringify(githubData));
+              setRefreshKey(k => k + 1);
+            }
+          }
+        } catch (e) {
+          console.log('Auto sync skipped:', e);
+        }
+      }, 1000);
+    }
   };
 
   const handleLogout = () => {
@@ -834,6 +865,7 @@ function App() {
     { id: 'challenges', label: '挑战' },
     { id: 'timecapsule', label: '时间胶囊' },
     { id: 'annual', label: '年度报告' },
+    { id: 'cloudsync', label: '云同步' },
   ];
 
   return (
@@ -1040,6 +1072,7 @@ function App() {
         {currentPage === 'challenges' && <ChallengesPage user={user} onDataUpdate={handleDataUpdate} />}
         {currentPage === 'timecapsule' && <TimeCapsulePage user={user} />}
         {currentPage === 'annual' && <AnnualReportPage user={user} />}
+        {currentPage === 'cloudsync' && <CloudSync user={user} onDataUpdate={handleDataUpdate} />}
       </div>
 
       {/* Mobile Bottom Nav */}
