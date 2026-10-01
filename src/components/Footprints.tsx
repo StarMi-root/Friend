@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { User, loadData, saveData, generateId, Photo, calculateLevel, getLevelLabel } from '../store';
 import { CameraAnimation } from './CameraAnimation';
 import { DEFAULT_TAGS, generateExif, compressImage } from '../utils';
+import { scorePhotoWithAI, AIScoreResult } from '../ai-service';
 
 interface FootprintsProps {
   user: User;
@@ -13,6 +14,8 @@ export const Footprints: React.FC<FootprintsProps> = ({ user, onDataUpdate }) =>
   const [showUpload, setShowUpload] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [scoreValue, setScoreValue] = useState(5);
+  const [aiScoring, setAiScoring] = useState<string | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   const data = loadData();
   const userPhotos = data.photos.filter(p => p.username === user.username);
@@ -114,6 +117,29 @@ export const Footprints: React.FC<FootprintsProps> = ({ user, onDataUpdate }) =>
     onDataUpdate();
   };
 
+  const handleAIScore = async (photo: Photo) => {
+    setAiScoring(photo.id);
+    setAiError(null);
+    
+    try {
+      const result = await scorePhotoWithAI(photo.src);
+      const idx = data.photos.findIndex(p => p.id === photo.id);
+      if (idx !== -1) {
+        data.photos[idx].aiScore = {
+          ...result,
+          date: new Date().toISOString()
+        };
+        saveData(data);
+        setSelectedPhoto(data.photos[idx]);
+        onDataUpdate();
+      }
+    } catch (error) {
+      setAiError(error instanceof Error ? error.message : 'AI评分失败');
+    } finally {
+      setAiScoring(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white p-6 md:p-10">
       {showCamera && (
@@ -210,6 +236,11 @@ export const Footprints: React.FC<FootprintsProps> = ({ user, onDataUpdate }) =>
                     {photo.score}/10
                   </div>
                 )}
+                {photo.aiScore && (
+                  <div className="absolute bottom-2 right-2 bg-purple-600/90 text-white text-xs font-medium px-2 py-0.5 rounded">
+                    AI {photo.aiScore.score}/10
+                  </div>
+                )}
               </div>
               <div className="p-4">
                 <p className="text-gray-700 text-sm mb-1">{photo.caption}</p>
@@ -283,6 +314,74 @@ export const Footprints: React.FC<FootprintsProps> = ({ user, onDataUpdate }) =>
                   </div>
                 </div>
               )}
+
+              {/* AI Score */}
+              <div className="bg-purple-50 rounded-lg p-3 mb-4 border border-purple-100">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs text-purple-700 font-medium">AI 摄影评审</p>
+                  {selectedPhoto.aiScore && (
+                    <span className="text-xs text-purple-600">
+                      {new Date(selectedPhoto.aiScore.date).toLocaleDateString('zh-CN')}
+                    </span>
+                  )}
+                </div>
+                
+                {aiScoring === selectedPhoto.id ? (
+                  <div className="text-center py-4">
+                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
+                    <p className="text-xs text-purple-600 mt-2">AI 正在分析照片...</p>
+                  </div>
+                ) : selectedPhoto.aiScore ? (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-2xl font-bold text-purple-900">{selectedPhoto.aiScore.score}</span>
+                      <span className="text-sm text-purple-600">/10</span>
+                    </div>
+                    <p className="text-xs text-purple-800 mb-2">{selectedPhoto.aiScore.feedback}</p>
+                    
+                    {selectedPhoto.aiScore.strengths.length > 0 && (
+                      <div className="mb-2">
+                        <p className="text-xs text-purple-700 font-medium mb-1">优点：</p>
+                        <ul className="text-xs text-purple-600 space-y-0.5">
+                          {selectedPhoto.aiScore.strengths.map((s, i) => (
+                            <li key={i}>• {s}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {selectedPhoto.aiScore.improvements.length > 0 && (
+                      <div>
+                        <p className="text-xs text-purple-700 font-medium mb-1">改进建议：</p>
+                        <ul className="text-xs text-purple-600 space-y-0.5">
+                          {selectedPhoto.aiScore.improvements.map((s, i) => (
+                            <li key={i}>• {s}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    <button
+                      onClick={() => handleAIScore(selectedPhoto)}
+                      className="mt-3 w-full py-1.5 bg-purple-100 text-purple-700 rounded text-xs hover:bg-purple-200 transition-colors"
+                    >
+                      重新评分
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    {aiError && (
+                      <p className="text-xs text-red-600 mb-2">{aiError}</p>
+                    )}
+                    <button
+                      onClick={() => handleAIScore(selectedPhoto)}
+                      className="w-full py-2 bg-purple-600 text-white rounded text-xs font-medium hover:bg-purple-700 transition-colors"
+                    >
+                      AI 智能评分
+                    </button>
+                  </div>
+                )}
+              </div>
 
               {/* Score */}
               <div className="mb-4">

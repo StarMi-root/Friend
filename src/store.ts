@@ -30,6 +30,13 @@ export interface Photo {
     shutterSpeed: string;
     iso: string;
   };
+  aiScore?: {
+    score: number;
+    feedback: string;
+    strengths: string[];
+    improvements: string[];
+    date: string;
+  };
 }
 
 export interface Friend {

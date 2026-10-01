@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User, loadData, setCurrentUser, getCurrentUser, saveData, clearAllData, exportData, importData, syncFromGitHub, syncToGitHub } from './store';
 import { getGitHubConfig, saveGitHubConfig, clearGitHubConfig, isGitHubConfigured, testGitHubConnection, GitHubConfig } from './github-storage';
 import { initDarkMode, toggleDarkMode, isDarkMode, updateStreak, recordActivity, getNotifications, saveNotifications, getLang, setLang, t, Lang, searchAll } from './utils';
+import { getAIConfig, saveAIConfig, resetAIConfig, testAIConnection, AIConfig } from './ai-service';
 import { Login } from './components/Login';
 import { Home } from './components/Home';
 import { Birthday } from './components/Birthday';
@@ -307,6 +308,129 @@ function App() {
       );
     };
 
+    const AIConfigPanel = () => {
+      const [config, setConfig] = useState<AIConfig>(getAIConfig());
+      const [testing, setTesting] = useState(false);
+      const [message, setMessage] = useState('');
+
+      const handleSaveConfig = () => {
+        saveAIConfig(config);
+        setMessage('配置已保存');
+        setTimeout(() => setMessage(''), 3000);
+      };
+
+      const handleTestConnection = async () => {
+        setTesting(true);
+        saveAIConfig(config);
+        const result = await testAIConnection();
+        setMessage(result.message);
+        setTesting(false);
+        setTimeout(() => setMessage(''), 5000);
+      };
+
+      const handleResetConfig = () => {
+        if (confirm('确定要恢复默认配置吗？')) {
+          resetAIConfig();
+          setConfig(getAIConfig());
+          setMessage('已恢复默认配置');
+          setTimeout(() => setMessage(''), 3000);
+        }
+      };
+
+      return (
+        <div className="space-y-6">
+          <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
+            <h3 className="text-gray-900 text-sm font-medium mb-4">AI 摄影评审配置</h3>
+            
+            {message && (
+              <div className={`mb-4 px-4 py-2 rounded-lg text-sm ${
+                message.includes('成功') ? 'bg-green-50 text-green-600 border border-green-200' :
+                message.includes('失败') || message.includes('错误') || message.includes('无效') ? 'bg-red-50 text-red-600 border border-red-200' :
+                'bg-blue-50 text-blue-600 border border-blue-200'
+              }`}>
+                {message}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-gray-500 text-xs mb-1.5 block font-medium">API Key</label>
+                <input
+                  type="password"
+                  value={config.apiKey}
+                  onChange={e => setConfig({ ...config, apiKey: e.target.value })}
+                  placeholder="sk-xxxxxxxxxxxxxxxx"
+                  className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 text-gray-900 text-sm focus:border-gray-400 focus:outline-none"
+                />
+                <p className="text-gray-400 text-xs mt-1">
+                  已内置免费 API 密钥，可直接使用或替换为自己的密钥
+                </p>
+              </div>
+
+              <div>
+                <label className="text-gray-500 text-xs mb-1.5 block font-medium">API Base URL</label>
+                <input
+                  type="text"
+                  value={config.baseUrl}
+                  onChange={e => setConfig({ ...config, baseUrl: e.target.value })}
+                  placeholder="https://api.agnes-ai.cn/v1"
+                  className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 text-gray-900 text-sm focus:border-gray-400 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-gray-500 text-xs mb-1.5 block font-medium">模型名称</label>
+                <input
+                  type="text"
+                  value={config.model}
+                  onChange={e => setConfig({ ...config, model: e.target.value })}
+                  placeholder="agnes-2.5-flash"
+                  className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 text-gray-900 text-sm focus:border-gray-400 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-6 flex-wrap">
+              <button
+                onClick={handleSaveConfig}
+                className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800"
+              >
+                保存配置
+              </button>
+              <button
+                onClick={handleTestConnection}
+                disabled={testing}
+                className="px-4 py-2 bg-purple-50 text-purple-600 rounded-lg text-sm hover:bg-purple-100 border border-purple-200 disabled:opacity-50"
+              >
+                {testing ? '测试中...' : '测试连接'}
+              </button>
+              <button
+                onClick={handleResetConfig}
+                className="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm hover:bg-red-100 border border-red-200"
+              >
+                恢复默认
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
+            <h3 className="text-gray-900 text-sm font-medium mb-4">使用说明</h3>
+            <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+              <p className="text-purple-800 text-xs font-medium mb-2">AI 摄影评审功能：</p>
+              <ul className="text-purple-700 text-xs space-y-1">
+                <li>• 在足迹页面点击照片的"详情"按钮</li>
+                <li>• 点击"AI 智能评分"按钮进行智能分析</li>
+                <li>• AI 会从构图、光影、色彩、主题、技术五个维度评分</li>
+                <li>• 提供详细的优点和改进建议</li>
+                <li>• 已内置免费 API 密钥，可直接使用</li>
+                <li>• 支持自定义接入其他兼容 OpenAI 格式的 API</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
     const handleDeleteUser = (username: string) => {
       data.users = data.users.filter(u => u.username !== username);
       data.photos = data.photos.filter(p => p.username !== username);
@@ -427,7 +551,8 @@ function App() {
               { id: 'photos', label: '照片' },
               { id: 'friends', label: '好友' },
               { id: 'wishes', label: '愿望' },
-              { id: 'github', label: '云同步' }
+              { id: 'github', label: '云同步' },
+              { id: 'ai', label: 'AI配置' }
             ].map(tab => (
               <button
                 key={tab.id}
@@ -443,6 +568,9 @@ function App() {
 
           {/* GitHub Sync Tab */}
           {adminTab === 'github' && <GitHubSyncPanel />}
+
+          {/* AI Config Tab */}
+          {adminTab === 'ai' && <AIConfigPanel />}
 
           {/* Users Tab */}
           {adminTab === 'users' && (
